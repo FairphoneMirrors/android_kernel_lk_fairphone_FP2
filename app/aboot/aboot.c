@@ -184,7 +184,7 @@ struct atag_ptbl_entry
  * for fastboot
  */
 struct getvar_partition_info {
-	const char part_name[MAX_GPT_NAME_SIZE]; /* Partition name */
+	char part_name[MAX_GPT_NAME_SIZE]; /* Partition name */
 	char getvar_size[MAX_GET_VAR_NAME_SIZE]; /* fastboot get var name for size */
 	char getvar_type[MAX_GET_VAR_NAME_SIZE]; /* fastboot get var name for type */
 	char size_response[MAX_RSP_SIZE];        /* fastboot response for size */
@@ -192,10 +192,10 @@ struct getvar_partition_info {
 };
 
 /*
- * Right now, we are publishing the info for only
- * three partitions
+ * Update the part_type_known for known paritions types.
  */
-struct getvar_partition_info part_info[] =
+struct getvar_partition_info part_info[NUM_PARTITIONS];
+struct getvar_partition_info part_type_known[] =
 {
 	{ "system"  , "partition-size:", "partition-type:", "", "ext4" },
 	{ "userdata", "partition-size:", "partition-type:", "", "ext4" },
@@ -2558,9 +2558,28 @@ static void get_partition_size(const char *arg, char *response)
  */
 static void publish_getvar_partition_info(struct getvar_partition_info *info, uint8_t num_parts)
 {
-	uint8_t i;
+	uint8_t i,n;
+	struct partition_entry *ptn_entry =
+				partition_get_partition_entries();
 
 	for (i = 0; i < num_parts; i++) {
+		strlcat(info[i].part_name, (char const *)ptn_entry[i].name, MAX_RSP_SIZE);
+		strlcat(info[i].getvar_size, "partition-size:", MAX_GET_VAR_NAME_SIZE);
+		strlcat(info[i].getvar_type, "partition-type:", MAX_GET_VAR_NAME_SIZE);
+
+		/* Mark partiton type for known paritions only */
+		for (n=0; n < ARRAY_SIZE(part_type_known); n++)
+		{
+			if (!strncmp(part_type_known[n].part_name, info[i].part_name,
+					strlen(part_type_known[n].part_name)))
+			{
+				strlcat(info[i].type_response,
+						part_type_known[n].type_response,
+						MAX_RSP_SIZE);
+				break;
+			}
+		}
+
 		get_partition_size(info[i].part_name, info[i].size_response);
 
 		if (strlcat(info[i].getvar_size, info[i].part_name, MAX_GET_VAR_NAME_SIZE) >= MAX_GET_VAR_NAME_SIZE)
@@ -2625,7 +2644,7 @@ void aboot_fastboot_register_commands(void)
 	 * devices.
 	 */
 	if (target_is_emmc_boot())
-		publish_getvar_partition_info(part_info, ARRAY_SIZE(part_info));
+		publish_getvar_partition_info(part_info, partition_get_partition_count());
 
 	/* Max download size supported */
 	snprintf(max_download_size, MAX_RSP_SIZE, "\t0x%x",

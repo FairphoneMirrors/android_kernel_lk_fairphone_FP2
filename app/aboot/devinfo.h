@@ -74,6 +74,7 @@ struct prod_info
 	unsigned char isn[PRODINFO_MAX_ISN_LEN];
 	unsigned char ssn[PRODINFO_MAX_SSN_LEN];
 	bool is_adb_enabled;
+	bool is_adb_enabled_cts;
 };
 
 void read_prod_info(prod_info *dev);

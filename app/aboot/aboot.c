@@ -189,6 +189,7 @@ static const char *battchg_pause = " androidboot.mode=charger";
 static const char *cust_sn_cmdline = " androidboot.customer_serialno=";
 static const char *factory_sn_cmdline = " androidboot.factory_serialno=";
 static const char *UsbAdbEnable = " androidboot.adb_enable=1";
+static const char *UsbAdbEnableCTS = " androidboot.adb_enable_cts=0";
 #endif
 /*[20200605][TracyChui] Implement get Serial Number end*/
 static const char *auth_kernel = " androidboot.authorized_kernel=true";
@@ -312,7 +313,7 @@ static int auth_kernel_img = 0;
 static device_info device = {DEVICE_MAGIC,0,0,0,0,{0},{0},{0},1,{0},0,{0}};
 /*[20200605][TracyChui] Implement get Serial Number start*/
 #if defined(ENABLE_PRODINFO_ACCESS)
-static prod_info prod = {PRODINFO_MAGIC, {0}, {0}, 0};
+static prod_info prod = {PRODINFO_MAGIC, {0}, {0}, 0, 0};
 #endif
 /*[20200605][TracyChui] Implement get Serial Number end*/
 
@@ -402,6 +403,7 @@ char charger_screen_enabled[MAX_RSP_SIZE];
 char cust_sn_buf[PRODINFO_MAX_SSN_LEN + 1];
 char factory_sn_buf[PRODINFO_MAX_SSN_LEN + 1];
 char AdbEnable[MAX_RSP_SIZE];
+char AdbEnableCTS[MAX_RSP_SIZE];
 #endif
 #if defined(ENABLE_PRODINFO_ACCESS)
 char sn_buf[PRODINFO_MAX_ISN_LEN + 1];
@@ -569,6 +571,7 @@ unsigned char *update_cmdline(const char * cmdline)
 /*[20200605][TracyChui] Implement get Serial Number start*/
 #if defined(ENABLE_PRODINFO_ACCESS)
 	int AdbEnable = 0;
+	int AdbEnableCTS = 0;
 #endif
 /*[20200605][TracyChui] Implement get Serial Number end*/
 	bool warm_boot = false;
@@ -706,11 +709,16 @@ unsigned char *update_cmdline(const char * cmdline)
 	if (prod.is_adb_enabled) {
 		dprintf(CRITICAL, "Device will enable adb\n");
 
-		prod.is_adb_enabled = 0;
+		if (prod.is_adb_enabled_cts) {
+			prod.is_adb_enabled = 1;
+		} else {
+			prod.is_adb_enabled = 0;
+		}
 		write_prod_info(&prod);
 
 		AdbEnable = 1;
 		cmdline_len += strlen(UsbAdbEnable);
+		cmdline_len += strlen(UsbAdbEnableCTS);
 	}
 #endif
 /*[20200605][TracyChui] Implement get Serial Number end*/
@@ -1170,6 +1178,12 @@ unsigned char *update_cmdline(const char * cmdline)
 			if (have_cmdline) --dst;
 			while ((*dst++ = *src++));
 		}
+
+                if (AdbEnableCTS) {
+                        src = UsbAdbEnableCTS;
+                        if (have_cmdline) --dst;
+                        while ((*dst++ = *src++));
+                }
 #endif
 /*[20200605][TracyChui] Implement get Serial Number end*/
 
@@ -3289,6 +3303,7 @@ void read_prod_info(prod_info *dev)
 			memcpy(info->isn, "No_Serial_Number", PRODINFO_MAX_ISN_LEN);
 			memcpy(info->ssn, "No_Custer_Serial_Number", PRODINFO_MAX_SSN_LEN);
 			info->is_adb_enabled = 0;
+			info->is_adb_enabled_cts = 0;
 			write_prod_info(info);
 		}
 		memcpy(dev, info, sizeof(prod_info));
@@ -5043,6 +5058,24 @@ void CmdOemEnableAdb(const char *arg, void *data, unsigned size)
 	write_prod_info(&prod);
 	fastboot_okay("");
 }
+
+void CmdOemEnableAdbCTS(const char *arg, void *data, unsigned size)
+{
+        dprintf(INFO, "Enabling Adb CTS\n");
+        prod.is_adb_enabled = 1;
+        prod.is_adb_enabled_cts = 1;
+        write_prod_info(&prod);
+        fastboot_okay("");
+}
+
+void CmdOemDisableAdbCTS(const char *arg, void *data, unsigned size)
+{
+        dprintf(INFO, "disabling Adb CTS\n");
+        prod.is_adb_enabled = 0;
+        prod.is_adb_enabled_cts = 0;
+        write_prod_info(&prod);
+        fastboot_okay("");
+}
 #endif
 /*[20200605][TracyChui] Implement get Serial Number end*/
 
@@ -5590,6 +5623,8 @@ void aboot_fastboot_register_commands(void)
 /*[20200605][TracyChui] Implement get Serial Number start*/
 #if defined(ENABLE_PRODINFO_ACCESS)
 						{"oem adb_enable", CmdOemEnableAdb},
+						{"oem adb_enable_cts", CmdOemEnableAdbCTS},
+						{"oem adb_disable_cts", CmdOemDisableAdbCTS},
 #endif
 /*[20200605][TracyChui] Implement get Serial Number end*/
 						};

@@ -59,6 +59,7 @@ extern void shutdown_device();
 
 typedef uint32_t (*keys_detect_func)(void);
 typedef void (*keys_action_func)(struct select_msg_info* msg_info);
+extern int msm_display_flush();
 
 struct keys_stru {
 	int type;
@@ -386,14 +387,17 @@ int select_msg_keys_detect(void *param) {
 		if (is_key_pressed(VOLUME_UP)) {
 			mutex_acquire(&msg_info->msg_lock);
 			menu_pages_action[msg_info->info.msg_type].up_action_func(msg_info);
+            msm_display_flush();
 			mutex_release(&msg_info->msg_lock);
 		} else if (is_key_pressed(VOLUME_DOWN)) {
 			mutex_acquire(&msg_info->msg_lock);
 			menu_pages_action[msg_info->info.msg_type].down_action_func(msg_info);
+            msm_display_flush();
 			mutex_release(&msg_info->msg_lock);
 		} else if (is_key_pressed(POWER_KEY)) {
 			mutex_acquire(&msg_info->msg_lock);
 			menu_pages_action[msg_info->info.msg_type].enter_action_func(msg_info);
+            msm_display_flush();
 			mutex_release(&msg_info->msg_lock);
 		}
 

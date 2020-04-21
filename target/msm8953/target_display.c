@@ -68,13 +68,19 @@
 static struct gpio_pin reset_gpio = {
   "msmgpio", 61, 3, 1, 0, 1
 };
+  
 
+//Jialong bkl gpio modify to 96 from 59
 static struct gpio_pin bkl_gpio = {
-  "msmgpio", 59, 3, 1, 0, 1
+  "msmgpio", 96, 3, 1, 0, 1
 };
 
 static struct gpio_pin enable_gpio = {
   "msmgpio", 12, 3, 1, 0, 1
+};
+
+static struct gpio_pin tp_reset_gpio = {
+  "msmgpio", 64, 3, 1, 0, 1
 };
 
 
@@ -153,6 +159,14 @@ static int pwm_backlight_ctrl(uint8_t enable)
 int target_backlight_ctrl(struct backlight *bl, uint8_t enable)
 {
 	uint32_t ret = NO_ERROR;
+    if(enable){
+        //enable backlight 
+        gpio_tlmm_config(bkl_gpio.pin_id, 0,
+            bkl_gpio.pin_direction, bkl_gpio.pin_pull,
+            bkl_gpio.pin_strength, bkl_gpio.pin_state);
+        
+        gpio_set_dir(bkl_gpio.pin_id, 2);
+    }
 
 	if (bl->bl_interface_type == BL_DCS)
 		return ret;
@@ -244,7 +258,6 @@ int target_panel_reset(uint8_t enable, struct panel_reset_sequence *resetseq,
 						struct msm_panel_info *pinfo)
 {
 	int ret = NO_ERROR;
-	uint32_t hw_id = board_hardware_id();
 
 	if (enable) {
 
@@ -257,13 +270,14 @@ int target_panel_reset(uint8_t enable, struct panel_reset_sequence *resetseq,
 			gpio_set_dir(enable_gpio.pin_id, 2);
 		}
 
-		if (hw_id != HW_PLATFORM_QRD) {
-			gpio_tlmm_config(bkl_gpio.pin_id, 0,
-				bkl_gpio.pin_direction, bkl_gpio.pin_pull,
-				bkl_gpio.pin_strength, bkl_gpio.pin_state);
+		gpio_tlmm_config(tp_reset_gpio.pin_id, 0,
+        tp_reset_gpio.pin_direction, tp_reset_gpio.pin_pull,
+        tp_reset_gpio.pin_strength, tp_reset_gpio.pin_state);
 
-			gpio_set_dir(bkl_gpio.pin_id, 2);
-		}
+        //set touch reset pin high low high
+        gpio_set_dir(tp_reset_gpio.pin_id, GPIO_STATE_HIGH);
+		gpio_set_dir(tp_reset_gpio.pin_id, GPIO_STATE_LOW);
+		gpio_set_dir(tp_reset_gpio.pin_id, GPIO_STATE_HIGH);
 
 		gpio_tlmm_config(reset_gpio.pin_id, 0,
 				reset_gpio.pin_direction, reset_gpio.pin_pull,

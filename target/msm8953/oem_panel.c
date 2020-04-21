@@ -52,6 +52,10 @@
 #include "include/panel_truly_wuxga_video.h"
 #include "include/panel_hx8399c_fhd_pluse_video.h"
 #include "include/panel_hx8399c_hd_plus_video.h"
+/*[Arima_8901][Jialong] lcm driver porting begin*/
+#include "include/panel_truly_hx83112b_1080p_video.h"
+#include "include/panel_djn_hx83112b_1080p_cmd.h"
+/*[Arima_8901][Jialong] lcm driver porting end*/
 
 /*---------------------------------------------------------------------------*/
 /* static panel selection variable                                           */
@@ -64,6 +68,10 @@ enum {
 	TRULY_WUXGA_VIDEO_PANEL,
 	HX8399C_FHD_PLUSE_VIDEO_PANEL,
 	HX8399C_HD_PLUS_VIDEO_PANEL,
+	/*[Arima_8901][Jialong] lcm driver porting begin*/
+	TRULY_HX83112B_1080P_VIDEO_PANEL,
+	DJN_HX83112B_1080P_CMD_PANEL,
+	/*[Arima_8901][Jialong] lcm driver porting end*/
 	UNKNOWN_PANEL
 };
 
@@ -79,6 +87,11 @@ static struct panel_list supp_panels[] = {
 	{"truly_wuxga_video", TRULY_WUXGA_VIDEO_PANEL},
 	{"hx8399c_fhd_pluse_video", HX8399C_FHD_PLUSE_VIDEO_PANEL},
 	{"hx8399c_hd_plus_video", HX8399C_HD_PLUS_VIDEO_PANEL},
+	/*[Arima_8901][Jialong] lcm driver porting begin*/
+	{"truly_hx83112b_1080p_video", TRULY_HX83112B_1080P_VIDEO_PANEL},
+	{"djn_hx83112b_1080p_cmd", DJN_HX83112B_1080P_CMD_PANEL},
+	/*[Arima_8901][Jialong] lcm driver porting end*/
+	
 };
 
 static uint32_t panel_id;
@@ -97,7 +110,16 @@ int oem_panel_on()
 	else if (panel_id == R69006_1080P_CMD_PANEL) {
 		mdelay(R69006_1080P_CMD_PANEL_ON_DELAY);
 	}
-
+	
+	/*[Arima_8901][Jialong] lcm driver porting begin*/
+    //[Arima][8901][JialongJhan] Command mode fix fuzzy screen when booting 20190516 Start
+	else if( panel_id == TRULY_HX83112B_1080P_VIDEO_PANEL || panel_id==DJN_HX83112B_1080P_CMD_PANEL)
+	{
+		mdelay(40);
+	}
+    //[Arima][8901][JialongJhan] Command mode fix fuzzy screen when booting 20190516 End
+	/*[Arima_8901][Jialong] lcm driver porting end*/
+	
 	return NO_ERROR;
 }
 
@@ -318,6 +340,57 @@ static int init_panel_data(struct panel_struct *panelstruct,
 			hx8399c_hd_plus_14nm_video_timings, MAX_TIMING_CONFIG * sizeof(uint32_t));
 		pinfo->mipi.signature    = HX8399C_HD_PLUS_VIDEO_SIGNATURE;
 		break;
+		
+	/*[Arima_8901][Jialong] lcm driver porting begin*/
+	case TRULY_HX83112B_1080P_VIDEO_PANEL:
+		panelstruct->paneldata    = &truly_hx83112b_1080p_video_panel_data;
+		panelstruct->paneldata->panel_with_enable_gpio = 0;
+		panelstruct->panelres     = &truly_hx83112b_1080p_video_panel_res;
+		panelstruct->color        = &truly_hx83112b_1080p_video_color;
+		panelstruct->videopanel   = &truly_hx83112b_1080p_video_video_panel;
+		panelstruct->commandpanel = &truly_hx83112b_1080p_video_command_panel;
+		panelstruct->state        = &truly_hx83112b_1080p_video_state;
+		panelstruct->laneconfig   = &truly_hx83112b_1080p_video_lane_config;
+		panelstruct->paneltiminginfo = &truly_hx83112b_1080p_video_timing_info;
+		panelstruct->panelresetseq = &truly_hx83112b_1080p_video_reset_seq;
+		panelstruct->backlightinfo = &truly_hx83112b_1080p_video_backlight;
+		//pinfo->labibb = &truly_hx83112b_1080p_video_labibb;
+		pinfo->mipi.panel_on_cmds = truly_hx83112b_1080p_video_on_command;
+		pinfo->mipi.num_of_panel_on_cmds = TRULY_HX83112B_1080P_VIDEO_ON_COMMAND;
+		pinfo->mipi.panel_off_cmds = truly_hx83112b_1080p_video_off_command;
+		pinfo->mipi.num_of_panel_off_cmds = TRULY_HX83112B_1080P_VIDEO_OFF_COMMAND;
+				//carful timing...
+		memcpy(phy_db->timing,
+			truly_hx83112b_1080p_14nm_video_timings, MAX_TIMING_CONFIG * sizeof(uint32_t));
+		//pinfo->mipi.signature    = TRULY_HX83112B_1080P_VIDEO_SIGNATURE;
+		break;
+
+
+    case DJN_HX83112B_1080P_CMD_PANEL:
+		panelstruct->paneldata    = &djn_hx83112b_1080p_cmd_panel_data;
+		panelstruct->paneldata->panel_with_enable_gpio = 0;
+		panelstruct->panelres     = &djn_hx83112b_1080p_cmd_panel_res;
+		panelstruct->color        = &djn_hx83112b_1080p_cmd_color;
+		panelstruct->videopanel   = &djn_hx83112b_1080p_cmd_video_panel;
+		panelstruct->commandpanel = &djn_hx83112b_1080p_cmd_command_panel;
+		panelstruct->state        = &djn_hx83112b_1080p_cmd_state;
+		panelstruct->laneconfig   = &djn_hx83112b_1080p_cmd_lane_config;
+		panelstruct->paneltiminginfo = &djn_hx83112b_1080p_cmd_timing_info;
+		panelstruct->panelresetseq = &djn_hx83112b_1080p_cmd_reset_seq;
+		panelstruct->backlightinfo = &djn_hx83112b_1080p_cmd_backlight;
+		//pinfo->labibb = &djn_hx83112b_1080p_cmd_labibb;
+		pinfo->mipi.panel_on_cmds = djn_hx83112b_1080p_cmd_on_command;
+		pinfo->mipi.num_of_panel_on_cmds = DJN_HX83112B_1080P_CMD_ON_COMMAND;
+		pinfo->mipi.panel_off_cmds = djn_hx83112b_1080p_cmd_off_command;
+		pinfo->mipi.num_of_panel_off_cmds = DJN_HX83112B_1080P_CMD_OFF_COMMAND;
+				//carful timing...
+		memcpy(phy_db->timing,
+			djn_hx83112b_1080p_14nm_cmd_timings, MAX_TIMING_CONFIG * sizeof(uint32_t));
+		pinfo->mipi.signature    = DJN_HX83112B_1080P_CMD_SIGNATURE;
+
+		break;
+	/*[Arima_8901][Jialong] lcm driver porting end*/
+	
 	case UNKNOWN_PANEL:
 	default:
 		memset(panelstruct, 0, sizeof(struct panel_struct));
@@ -347,7 +420,7 @@ int oem_panel_select(const char *panel_name, struct panel_struct *panelstruct,
 			struct mdss_dsi_phy_ctrl *phy_db)
 {
 	uint32_t hw_id = board_hardware_id();
-	uint32_t platform_subtype = board_hardware_subtype();
+	//uint32_t platform_subtype = board_hardware_subtype();
 	int32_t panel_override_id;
 	phy_db->pll_type = DSI_PLL_TYPE_THULIUM;
 
@@ -369,28 +442,40 @@ int oem_panel_select(const char *panel_name, struct panel_struct *panelstruct,
 	}
 
 	switch (hw_id) {
+		
+	/*[Arima_8901][Jialong] lcm driver porting begin*/
 	case HW_PLATFORM_MTP:
-		panel_id = TRULY_1080P_VIDEO_PANEL;
-		if (platform_subtype == 0x03 || platform_subtype == 0x04)
-			panel_id = HX8399C_FHD_PLUSE_VIDEO_PANEL;
-		break;
+		//panel_id = TRULY_1080P_VIDEO_PANEL;
+		//if (platform_subtype == 0x03)
+		//	panel_id = HX8399C_FHD_PLUSE_VIDEO_PANEL;
+		//break;
 	case HW_PLATFORM_SURF:
 	case HW_PLATFORM_RCM:
-		panel_id = TRULY_1080P_VIDEO_PANEL;
-		if (platform_subtype == 0x02 || platform_subtype == 0x03)
-			 panel_id = HX8399C_FHD_PLUSE_VIDEO_PANEL;
-		break;
+		//panel_id = TRULY_1080P_VIDEO_PANEL;
+		//if (platform_subtype == 0x02)
+		//	 panel_id = HX8399C_FHD_PLUSE_VIDEO_PANEL;
+		//break;
 	case HW_PLATFORM_QRD:
-		panel_id = R69006_1080P_CMD_PANEL;
-		if (platform_subtype == 0x01 || platform_subtype == 0x03)
-			panel_id = HX8399C_FHD_PLUSE_VIDEO_PANEL;
+		//panel_id = R69006_1080P_CMD_PANEL;
+		//if (platform_subtype == 0x01 || platform_subtype == 0x03)
+		//	panel_id = HX8399C_FHD_PLUSE_VIDEO_PANEL;
+	
+        //[Arima][8901][JialongJhan] Command mode 20190516 Start
+        //[Jialong]This is default for video mode
+        //panel_id = TRULY_HX83112B_1080P_VIDEO_PANEL;
+
+        //[Jialong]This is default for command mode
+        panel_id = DJN_HX83112B_1080P_CMD_PANEL;
+        //[Arima][8901][JialongJhan] Command mode 20190516 End
 		break;
+	/*[Arima_8901][Jialong] lcm driver porting end*/
+	
 	default:
 		dprintf(CRITICAL, "Display not enabled for %d HW type\n",
 			hw_id);
 		return PANEL_TYPE_UNKNOWN;
 	}
-
+	
 panel_init:
 	/*
 	 * Update all data structures after 'panel_init' label. Only panel

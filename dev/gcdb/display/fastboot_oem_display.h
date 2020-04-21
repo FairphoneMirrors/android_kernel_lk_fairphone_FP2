@@ -115,6 +115,10 @@ struct panel_lookup_list lookup_skip_panels[] = {
 	{"hx8399c_hd_plus_video", "qcom,mdss_dsi_hx8399c_hd_video", false},
 	{"nt35695b_truly_fhd_video", "qcom,mdss_dsi_nt35695b_truly_fhd_video", false},
 	{"nt35695b_truly_fhd_cmd", "qcom,mdss_dsi_nt35695b_truly_fhd_cmd", false},
+    //Jialong Start	
+	{"truly_hx83112b_1080p_video", "qcom,mdss_dsi_hx83112b_truly_1080p_video", false},
+	
+	//Jialong End
 };
 
 struct sim_lookup_list lookup_sim[] = {

@@ -39,6 +39,10 @@
 #ifdef DISPLAY_TYPE_MDSS
 #include <target/display.h>
 #endif
+//[Arima][8901][JialongJhan]Set Fastboot logo delay function 20190627 Start
+#include <platform/timer.h>
+extern bool boot_into_fastboot;
+//[Arima][8901][JialongJhan]Set Fastboot logo delay function 20190627 Start
 
 static struct msm_fb_panel_data *panel;
 
@@ -284,6 +288,29 @@ msm_display_on_out:
 	return ret;
 }
 
+//[Arima][8901][JialongJhan] Command mode update screen 20190516 Start
+int msm_display_flush()
+{
+	int ret = NO_ERROR;
+	struct msm_panel_info *pinfo;
+
+	if (!panel)
+		return ERR_INVALID_ARGS;
+
+	pinfo = &(panel->panel_info);
+	if (!pinfo)
+		return ERR_INVALID_ARGS;
+
+	switch (pinfo->type) {
+		case MIPI_CMD_PANEL:
+
+			ret = mdp_dma_on(pinfo);
+			break;
+	}
+	return ret;
+}
+//[Arima][8901][JialongJhan] Command mode update screen 20190516 End
+
 int msm_display_init(struct msm_fb_panel_data *pdata)
 {
 	int ret = NO_ERROR;
@@ -348,7 +375,16 @@ int msm_display_init(struct msm_fb_panel_data *pdata)
 		goto msm_display_init_out;
 
 	fbcon_setup(&(panel->fb));
-	display_image_on_screen();
+    //[Arima][8901][JialongJhan]Shown logo/fastboot logo based on condition 20190627 Start
+
+    if(boot_into_fastboot){
+        mdelay(1100);// avoid fuzzy screen.
+        //display_fastboot_image_on_screen();
+        }
+    else{
+        display_image_on_screen();
+    }
+    //[Arima][8901][JialongJhan]Shown logo/fastboot logo based on condition 20190627 End
 
 	if ((panel->dsi2HDMI_config) && (panel->panel_info.has_bridge_chip))
 		ret = panel->dsi2HDMI_config(&(panel->panel_info));

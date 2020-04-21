@@ -45,6 +45,9 @@
 
 #define TITLE_MSG "<!>\n\n"
 
+//[Arima][8901][JialongJhan] Command mode update screen 20190516 Start
+extern int msm_display_flush();
+//[Arima][8901][JialongJhan] Command mode update screen 20190516 End
 static const char *unlock_menu_common_msg = "By unlocking the bootloader, you will be able to install "\
 				"custom operating system on this phone. "\
 				"A custom OS is not subject to the same level of testing "\
@@ -160,6 +163,9 @@ static void wait_for_exit()
 	is_thread_start = false;
 	fbcon_clear();
 	display_image_on_screen();
+    //[Arima][8901][JialongJhan] Command mode update screen 20190618 Start 
+    msm_display_flush();
+    //[Arima][8901][JialongJhan] Command mode update screen 20190618 End 
 }
 
 void wait_for_users_action()
@@ -568,6 +574,9 @@ void display_unlock_menu(int type, bool status)
 		unlock_menu_msg_info->info.msg_type;
 
 	display_unlock_menu_renew(unlock_menu_msg_info, type, status);
+    //[Arima][8901][JialongJhan] Command mode update screen 20190618 Start 
+    msm_display_flush();
+    //[Arima][8901][JialongJhan] Command mode update screen 20190618 End
 	mutex_release(&unlock_menu_msg_info->msg_lock);
 
 	dprintf(INFO, "creating %s keys detect thread\n",
@@ -598,6 +607,9 @@ void display_fastboot_menu()
 		fastboot_menu_msg_info->info.msg_type;
 
 	display_fastboot_menu_renew(fastboot_menu_msg_info);
+    //[Arima][8901][JialongJhan] Command mode update screen 20190618 Start
+    msm_display_flush();
+    //[Arima][8901][JialongJhan] Command mode update screen 20190618 End
 	mutex_release(&fastboot_menu_msg_info->msg_lock);
 
 	dprintf(INFO, "creating fastboot menu keys detect thread\n");
@@ -623,6 +635,9 @@ void display_bootverify_menu(int type)
 		bootverify_menu_msg_info->info.msg_type;
 
 	display_bootverify_menu_renew(bootverify_menu_msg_info, type);
+    //[Arima][8901][JialongJhan] Command mode update screen 201906118 Start
+    msm_display_flush();
+    //[Arima][8901][JialongJhan] Command mode update screen 20190618 End
 	mutex_release(&bootverify_menu_msg_info->msg_lock);
 
 	dprintf(INFO, "creating boot verify keys detect thread\n");

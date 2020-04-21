@@ -49,6 +49,15 @@ addr_t get_bs_info_addr(void);
 void display_init(void);
 void display_shutdown(void);
 void display_image_on_screen(void);
+//[Arima][8901][JialongJhan]Show Fastboot logo 20190418 Start
+void display_default_image_on_screen(void);
+void display_fastboot_image_on_screen(void);
+void display_lowbattery_image_on_screen(void);
+//[Arima][8901][JialongJhan]Show Fastboot logo 20190418 End
+//[Arima][8901][JialongJhan] Command mode update screen 20190516 Start
+int msm_display_flush(void);
+//[Arima][8901][JialongJhan] Command mode update screen 20190516 End
+
 void display_fbcon_message(char *str);
 
 unsigned board_machtype(void);

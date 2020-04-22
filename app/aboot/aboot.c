@@ -2843,6 +2843,10 @@ void read_device_info(device_info *dev)
 #endif
 			write_device_info(info);
 		}
+
+		info->charger_screen_enabled = 1;
+		write_device_info(info);
+
 		memcpy(dev, info, sizeof(device_info));
 		free(info);
 	}

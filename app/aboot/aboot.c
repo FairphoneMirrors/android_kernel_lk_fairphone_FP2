@@ -2821,6 +2821,12 @@ void read_device_info(device_info *dev)
 #endif
 			write_device_info(info);
 		}
+
+//<2020/04/22-JessicaTseng, Enable off-charging
+		info->charger_screen_enabled = 1;
+		write_device_info(info);
+//>2020/04/22-JessicaTseng
+
 		memcpy(dev, info, sizeof(device_info));
 		free(info);
 	}

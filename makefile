@@ -180,6 +180,10 @@ else
   DEFINES += TARGET_USE_SYSTEM_AS_ROOT_IMAGE=0
 endif
 
+DEFINES += ARIMA_BASEBAND_VERSION=
+DEFINES += ARIMA_BOOTLOADER_VERSION=
+$(warning DEFINES : $(DEFINES))
+
 # these need to be filled out by the project/target/platform rules.mk files
 TARGET :=
 PLATFORM :=

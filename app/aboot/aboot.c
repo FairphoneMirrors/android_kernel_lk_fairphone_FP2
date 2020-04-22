@@ -5126,13 +5126,19 @@ void get_bootloader_version_iot(unsigned char *buf)
 
 void get_bootloader_version(unsigned char *buf)
 {
-	snprintf((char*)buf, MAX_RSP_SIZE, "%s",  device.bootloader_version);
+	/* Show SW and modem version and internal storage size on fastboot screen start */
+	//snprintf((char*)buf, MAX_RSP_SIZE, "%s",  device.bootloader_version);
+	memcpy(buf, ARIMA_BOOTLOADER_VERSION, MAX_VERSION_LEN);
+	dprintf(CRITICAL, "ARIMA_BOOTLOADER_VERSION:%s\n",ARIMA_BOOTLOADER_VERSION);
 	return;
 }
 
 void get_baseband_version(unsigned char *buf)
 {
-	snprintf((char*)buf, MAX_RSP_SIZE, "%s", device.radio_version);
+	/* Show SW and modem version and internal storage size on fastboot screen start */
+	//snprintf((char*)buf, MAX_RSP_SIZE, "%s", device.radio_version);
+	memcpy(buf, ARIMA_BASEBAND_VERSION, MAX_VERSION_LEN);
+	dprintf(CRITICAL, "ARIMA_BASEBAND_VERSION:%s\n",ARIMA_BASEBAND_VERSION);
 	return;
 }
 

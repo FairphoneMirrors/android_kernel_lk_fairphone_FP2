@@ -215,6 +215,14 @@ static const char *android_boot_dtbo_idx = " androidboot.dtbo_idx=";
 static const char *android_boot_dtb_idx = " androidboot.dtb_idx=";
 #endif
 
+#include <platform/gpio.h>
+static const char *PCBA_STAGE_0 = " androidboot.pcbastage=EP0";
+static const char *PCBA_STAGE_1 = " androidboot.pcbastage=EP1";
+static const char *PCBA_STAGE_2 = " androidboot.pcbastage=EP2";
+static const char *PCBA_STAGE_3 = " androidboot.pcbastage=FP";
+static const char *PCBA_STAGE_4 = " androidboot.pcbastage=MP";
+static const char *PCBA_STAGE_F = " androidboot.pcbastage=Reserved";
+
 #if VERIFIED_BOOT
 static const char *verity_mode = " androidboot.veritymode=";
 static const char *verified_state= " androidboot.verifiedbootstate=";
@@ -453,6 +461,37 @@ void update_battery_status(void)
 }
 #endif
 
+uint32_t GetPcbaVariant(void)
+{
+	uint8_t GPIO_97=10;
+	uint8_t GPIO_98=10;
+	uint8_t GPIO_99=10;
+
+	uint8_t pcba_stage = 0;
+
+	// Config GPIO
+	gpio_tlmm_config(97, 0, GPIO_INPUT, GPIO_NO_PULL, GPIO_2MA, GPIO_ENABLE);
+	gpio_tlmm_config(98, 0, GPIO_INPUT, GPIO_NO_PULL, GPIO_2MA, GPIO_ENABLE);
+	gpio_tlmm_config(99, 0, GPIO_INPUT, GPIO_NO_PULL, GPIO_2MA, GPIO_ENABLE);
+
+	/* Wait for the gpio config to take effect - debounce time */
+	thread_sleep(10);
+
+	/* Get status of GPIO */
+	GPIO_97  = gpio_status(97);
+	GPIO_98  = gpio_status(98);
+	GPIO_99  = gpio_status(99);
+
+	pcba_stage = (GPIO_99 << 2) + (GPIO_98 << 1) + GPIO_97;
+	dprintf(ALWAYS, "pcba_stage status: %u\n", pcba_stage);
+    //  GPIO_99		GPIO_98		GPIO_97
+	// 	0			0			0		    EP0
+	// 	0			0			1		    EP1
+	// 	0			1			0		    EP2
+	// 	0			1			1		    PP
+	return pcba_stage;
+}
+
 unsigned char *update_cmdline(const char * cmdline)
 {
 	int cmdline_len = 0;
@@ -634,6 +673,33 @@ unsigned char *update_cmdline(const char * cmdline)
 			break;
 	}
 
+	switch(GetPcbaVariant())
+	{
+		case 0: // EP0
+    		cmdline_len += strlen(PCBA_STAGE_0);
+			break;
+
+		case 1: // EP1
+			cmdline_len += strlen(PCBA_STAGE_1);
+			break;
+
+		case 2: // EP2
+			cmdline_len += strlen(PCBA_STAGE_2);
+			break;
+
+		case 3: // FP/PP
+			cmdline_len += strlen(PCBA_STAGE_3);
+			break;
+
+		case 4: // MP
+			cmdline_len += strlen(PCBA_STAGE_4);
+			break;
+
+		default:// Reserved
+			cmdline_len += strlen(PCBA_STAGE_F);
+			break;
+	}
+
 #if ENABLE_DISPLAY
 	if (cmdline) {
 		if ((strstr(cmdline, DISPLAY_DEFAULT_PREFIX) == NULL) &&
@@ -785,6 +851,40 @@ unsigned char *update_cmdline(const char * cmdline)
 				if (have_cmdline) --dst;
 				while ((*dst++ = *src++));
 			}
+		}
+
+		switch(GetPcbaVariant())
+		{
+		  case 0:
+			src = PCBA_STAGE_0;
+			if (have_cmdline) --dst;
+			while ((*dst++ = *src++));
+						break;
+		  case 1:
+			src = PCBA_STAGE_1;
+			if (have_cmdline) --dst;
+			while ((*dst++ = *src++));
+						break;
+		  case 2:
+			src = PCBA_STAGE_2;
+			if (have_cmdline) --dst;
+			while ((*dst++ = *src++));
+						break;
+		  case 3:
+			src = PCBA_STAGE_3;
+			if (have_cmdline) --dst;
+			while ((*dst++ = *src++));
+						break;
+		  case 4:
+			src = PCBA_STAGE_4;
+			if (have_cmdline) --dst;
+			while ((*dst++ = *src++));
+						break;
+		  default:
+			src = PCBA_STAGE_F;
+			if (have_cmdline) --dst;
+			while ((*dst++ = *src++));
+						break;
 		}
 
 #if VERIFIED_BOOT

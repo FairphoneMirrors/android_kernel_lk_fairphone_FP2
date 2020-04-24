@@ -260,6 +260,19 @@ static uint32_t recovery_dtbo_size = 0;
 static int auth_kernel_img = 0;
 static device_info device = {DEVICE_MAGIC,0,0,0,0,{0},{0},{0},1,{0},0,{0}};
 
+/*[Arima_8910][jhchen] add fuse check property 20181031 begin*/
+#ifdef ENABLE_FUSE_CHECK
+static const char *fuse_blown     = " androidboot.oem.color=red";
+static const char *fuse_not_blown = " androidboot.oem.color=brown";
+#endif
+/*[Arima_8910][jhchen] 20181031 end*/
+
+/*[Arima_8910][jhchen] add fuse check property 20181031 begin*/
+#ifdef ENABLE_FUSE_CHECK
+    int is_fused = 0;
+#endif
+/*[Arima_8910][jhchen] 20181031 end*/
+
 static bool is_allow_unlock = 0;
 
 static char frp_ptns[2][8] = {"config","frp"};
@@ -726,6 +739,21 @@ unsigned char *update_cmdline(const char * cmdline)
 	}
 #endif
 
+/*[Arima_8910][jhchen] add fuse check property 20181031 begin*/
+#ifdef ENABLE_FUSE_CHECK
+	{
+		int hw_key_status = readl(0xA01D0);
+		is_fused = (hw_key_status & 0x2) >> 1;
+		dprintf(CRITICAL, "hw_key_status = 0x%x, is_fused=%d\n", hw_key_status, is_fused);
+		if (is_fused) {
+	        cmdline_len += strlen(fuse_blown);
+		} else {
+	        cmdline_len += strlen(fuse_not_blown);
+		}
+    }
+#endif
+/*[Arima_8910][jhchen] 20181031 end*/
+
 	if (cmdline_len > 0) {
 		const char *src;
 		unsigned char *dst;
@@ -1011,6 +1039,20 @@ unsigned char *update_cmdline(const char * cmdline)
 			while ((*dst++ = *src++));
 		}
 #endif
+
+/*[Arima_8910][jhchen] add fuse check property 20181031 begin*/
+#ifdef ENABLE_FUSE_CHECK
+		if (is_fused) {
+			src = fuse_blown;
+			if (have_cmdline) --dst;
+			while ((*dst++ = *src++));
+		} else {
+			src = fuse_not_blown;
+			if (have_cmdline) --dst;
+			while ((*dst++ = *src++));
+		}
+#endif
+/*[Arima_8910][jhchen] 20181031 end*/
 	}
 
 
@@ -4976,19 +5018,13 @@ void get_bootloader_version_iot(unsigned char *buf)
 
 void get_bootloader_version(unsigned char *buf)
 {
-	/* Show SW and modem version and internal storage size on fastboot screen start */
-	//snprintf((char*)buf, MAX_RSP_SIZE, "%s",  device.bootloader_version);
-	memcpy(buf, ARIMA_BOOTLOADER_VERSION, MAX_VERSION_LEN);
-	dprintf(CRITICAL, "ARIMA_BOOTLOADER_VERSION:%s\n",ARIMA_BOOTLOADER_VERSION);
+	snprintf((char*)buf, MAX_RSP_SIZE, "%s",  device.bootloader_version);
 	return;
 }
 
 void get_baseband_version(unsigned char *buf)
 {
-	/* Show SW and modem version and internal storage size on fastboot screen start */
-	//snprintf((char*)buf, MAX_RSP_SIZE, "%s", device.radio_version);
-	memcpy(buf, ARIMA_BASEBAND_VERSION, MAX_VERSION_LEN);
-	dprintf(CRITICAL, "ARIMA_BASEBAND_VERSION:%s\n",ARIMA_BASEBAND_VERSION);
+	snprintf((char*)buf, MAX_RSP_SIZE, "%s", device.radio_version);
 	return;
 }
 

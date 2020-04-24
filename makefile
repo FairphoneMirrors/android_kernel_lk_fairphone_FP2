@@ -75,6 +75,10 @@ ifeq ($(ENABLE_EARLY_ETHERNET),1)
   CFLAGS += -DENABLE_EARLY_ETHERNET=1
 endif
 
+# [Arima_8910][jhchen] add fuse check property 20181031 begin
+CFLAGS += -DENABLE_FUSE_CHECK=1
+# [Arima_8910][jhchen] 20181031 end
+
 # setup toolchain prefix
 TOOLCHAIN_PREFIX ?= arm-eabi-
 CFLAGS += -fstack-protector-all
@@ -179,10 +183,6 @@ ifeq ($(TARGET_USE_SYSTEM_AS_ROOT_IMAGE),1)
 else
   DEFINES += TARGET_USE_SYSTEM_AS_ROOT_IMAGE=0
 endif
-
-DEFINES += ARIMA_BASEBAND_VERSION=
-DEFINES += ARIMA_BOOTLOADER_VERSION=
-$(warning DEFINES : $(DEFINES))
 
 # these need to be filled out by the project/target/platform rules.mk files
 TARGET :=

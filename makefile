@@ -75,6 +75,8 @@ ifeq ($(ENABLE_EARLY_ETHERNET),1)
   CFLAGS += -DENABLE_EARLY_ETHERNET=1
 endif
 
+CFLAGS += -DENABLE_FUSE_CHECK=1
+
 # setup toolchain prefix
 TOOLCHAIN_PREFIX ?= arm-eabi-
 CFLAGS += -fstack-protector-all
@@ -179,10 +181,6 @@ ifeq ($(TARGET_USE_SYSTEM_AS_ROOT_IMAGE),1)
 else
   DEFINES += TARGET_USE_SYSTEM_AS_ROOT_IMAGE=0
 endif
-
-DEFINES += ARIMA_BASEBAND_VERSION=
-DEFINES += ARIMA_BOOTLOADER_VERSION=
-$(warning DEFINES : $(DEFINES))
 
 # these need to be filled out by the project/target/platform rules.mk files
 TARGET :=

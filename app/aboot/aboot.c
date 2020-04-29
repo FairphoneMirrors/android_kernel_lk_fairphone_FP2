@@ -3048,6 +3048,8 @@ static void set_device_unlock(int type, bool status)
 		return;
 	}
 
+	//<2018/01/09-EricLin, To remove display_unlock_menu for quiet mode.
+	if(target_build_variant_user()){
 #if FBCON_DISPLAY_MSG
 	display_unlock_menu(type, status);
 	fastboot_okay("");
@@ -3058,6 +3060,8 @@ static void set_device_unlock(int type, bool status)
 		return;
 	}
 #endif
+	}
+	//<2018/01/09-EricLin
 
 	set_device_unlock_value(type, status);
 
@@ -3068,7 +3072,9 @@ static void set_device_unlock(int type, bool status)
 	write_misc(0, &msg, sizeof(msg));
 
 	fastboot_okay("");
-	reboot_device(RECOVERY_MODE);
+	//<2018/10/16-EricLin, To remove reset after oem lock/unlock.
+	//reboot_device(RECOVERY_MODE);
+	//<2018/10/16-EricLin
 }
 
 static bool critical_flash_allowed(const char * entry)

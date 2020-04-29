@@ -3052,6 +3052,7 @@ static void set_device_unlock(int type, bool status)
 		return;
 	}
 
+	if(target_build_variant_user()){
 #if FBCON_DISPLAY_MSG
 	display_unlock_menu(type, status);
 	fastboot_okay("");
@@ -3062,6 +3063,7 @@ static void set_device_unlock(int type, bool status)
 		return;
 	}
 #endif
+	}
 
 	set_device_unlock_value(type, status);
 
@@ -3072,7 +3074,7 @@ static void set_device_unlock(int type, bool status)
 	write_misc(0, &msg, sizeof(msg));
 
 	fastboot_okay("");
-	reboot_device(RECOVERY_MODE);
+	//reboot_device(RECOVERY_MODE);
 }
 
 static bool critical_flash_allowed(const char * entry)

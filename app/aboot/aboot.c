@@ -222,6 +222,7 @@ static const char *PCBA_STAGE_1 = " androidboot.pcbastage=EP1";
 static const char *PCBA_STAGE_2 = " androidboot.pcbastage=EP2";
 static const char *PCBA_STAGE_3 = " androidboot.pcbastage=FP";
 static const char *PCBA_STAGE_4 = " androidboot.pcbastage=MP";
+static const char *PCBA_STAGE_5 = " androidboot.pcbastage=MP-8903MB_001";
 static const char *PCBA_STAGE_F = " androidboot.pcbastage=Reserved";
 //>20200424-michaellin
 
@@ -478,11 +479,13 @@ uint32_t GetPcbaVariant(void)
 
 	pcba_stage = (GPIO_99 << 2) + (GPIO_98 << 1) + GPIO_97;
 	dprintf(ALWAYS, "pcba_stage status: %u\n", pcba_stage);
-    //  GPIO_99		GPIO_98		GPIO_97
+	// 	GPIO_99			GPIO_98			GPIO_97
 	// 	0			0			0		    EP0
 	// 	0			0			1		    EP1
 	// 	0			1			0		    EP2
-	// 	0			1			1		    PP
+	// 	0			1			1		    FP(8901MB-007)/PP
+	// 	1			0			0		    MP(8901MB-008)
+	// 	1			0			1		    MP-8903MB_001
 	return pcba_stage;
 }
 //>20200424-michaellin
@@ -683,12 +686,16 @@ unsigned char *update_cmdline(const char * cmdline)
 			cmdline_len += strlen(PCBA_STAGE_2);
 			break;
 
-		case 3: // FP/PP
+		case 3: // FP(8901MB-007)/PP
 			cmdline_len += strlen(PCBA_STAGE_3);
 			break;
 
-		case 4: // MP
+		case 4: // MP(8901MB-008)
 			cmdline_len += strlen(PCBA_STAGE_4);
+			break;			
+
+		case 5: // MP-8903MB_001
+			cmdline_len += strlen(PCBA_STAGE_5);
 			break;			
 
 		default:// Reserved
@@ -890,6 +897,11 @@ unsigned char *update_cmdline(const char * cmdline)
 						break;
 		  case 4:
 			src = PCBA_STAGE_4;
+			if (have_cmdline) --dst;
+			while ((*dst++ = *src++));
+						break;
+		  case 5:
+			src = PCBA_STAGE_5;
 			if (have_cmdline) --dst;
 			while ((*dst++ = *src++));
 						break;

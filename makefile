@@ -60,9 +60,11 @@ ifeq ($(SIGNED_KERNEL),1)
   CFLAGS += -D_SIGNED_KERNEL=1
 endif
 
-ifeq ($(TARGET_BUILD_VARIANT),user)
-  CFLAGS += -DDISABLE_FASTBOOT_CMDS=1
-endif
+#//<2020/05/06-JessicaTseng, Enable fastboot command in user build
+#ifeq ($(TARGET_BUILD_VARIANT),user)
+#  CFLAGS += -DDISABLE_FASTBOOT_CMDS=1
+#endif
+#//>2020/05/06-JessicaTseng
 
 ifeq ($(APPEND_CMDLINE),1)
   CFLAGS += -D_APPEND_CMDLINE=1

@@ -43,7 +43,9 @@
  * Set long press wait time to 500ms to benefit boot time.
  */
 #define MPM_SLEEP_TIMETICK_COUNT    0x8000
-#define PWRKEY_LONG_PRESS_COUNT     0x4000
+//<2019/01/15-RexLu, Modify long-pressing PWR key for 2.2s to boot-up.
+#define PWRKEY_LONG_PRESS_COUNT     0x1199A		//2.2sec
+//>2019/01/15-RexLu
 #define QPNP_DEFAULT_TIMEOUT        250
 #define PWRKEY_DETECT_FREQUENCY     50
 

@@ -576,8 +576,10 @@ void display_default_image_on_screen(void)
 	total_x = config->width;
 	total_y = config->height;
 	bytes_per_bpp = ((config->bpp) / 8);
+
 	image_base = ((((total_y/2) - (SPLASH_IMAGE_HEIGHT / 2) - 1) *
 			(config->width)) + (total_x/2 - (SPLASH_IMAGE_WIDTH / 2)));
+
 
 #if ENABLE_WBC
 	image = (pm_appsbl_charging_in_progress() ? image_batt888 : imageBuffer_rgb888);
@@ -585,6 +587,9 @@ void display_default_image_on_screen(void)
 	image = imageBuffer_rgb888;
 #endif
 
+//[Arima][8901][JialongJhan]modify Boot logo 20190418 Start
+
+#if 0 //ignore default
 	if (bytes_per_bpp == 3) {
 		for (i = 0; i < SPLASH_IMAGE_HEIGHT; i++) {
 			memcpy (config->base + ((image_base + (i * (config->width))) * bytes_per_bpp),
@@ -592,6 +597,7 @@ void display_default_image_on_screen(void)
 			SPLASH_IMAGE_WIDTH * bytes_per_bpp);
 		}
 	}
+#endif
 
 	if (bytes_per_bpp == 2) {
 		for (i = 0; i < SPLASH_IMAGE_HEIGHT; i++) {
@@ -601,6 +607,43 @@ void display_default_image_on_screen(void)
 		}
 	}
 
+    /*[Jialong]Description:
+    image_base is picture's placemark which we want wirte.
+    The formula is (Row * Total_Column)+Column, so we can obtain placemark of first pixel of picture.
+
+    image is array of picture.
+
+    We use memcpy function display all pixels of line, 
+    and use "for loop" function display all lines of picture.*/
+
+    //Show logo's top parts.
+    image_base=(913*1080)+208;
+    image = logo_top;
+    
+    if (bytes_per_bpp == 3) {
+        for (i = 0; i < FAIRPHONE_SPLASH_IMAGE_TOP_HEIGHT; i++) {
+            memcpy (config->base + ((image_base + (i * (config->width))) * bytes_per_bpp),
+            image + (i * FAIRPHONE_SPLASH_IMAGE_TOP_WIDTH * bytes_per_bpp),
+            FAIRPHONE_SPLASH_IMAGE_TOP_WIDTH * bytes_per_bpp);
+        }
+    }
+    //Show logo's top parts end.
+    
+    //Show logo's bottom parts.
+    image_base=(1884*1080)+403;
+    image = logo_bottom;
+    
+    if (bytes_per_bpp == 3) {
+        for (i = 0; i < FAIRPHONE_SPLASH_IMAGE_BOTTOM_HEIGHT; i++) {
+            memcpy (config->base + ((image_base + (i * (config->width))) * bytes_per_bpp),
+            image + (i * FAIRPHONE_SPLASH_IMAGE_BOTTOM_WIDTH * bytes_per_bpp),
+            FAIRPHONE_SPLASH_IMAGE_BOTTOM_WIDTH * bytes_per_bpp);
+        }
+    }
+    //Show logo's bottom parts end.
+
+    //[Arima][8901][JialongJhan]modify Boot logo 20190418 End
+
 	fbcon_flush();
 
 #if DISPLAY_MIPI_PANEL_NOVATEK_BLUE
@@ -608,6 +651,148 @@ void display_default_image_on_screen(void)
 		mipi_dsi_cmd_mode_trigger();
 #endif
 }
+
+//[Arima][8901][JialongJhan]Show Fastboot logo 20190418 Start
+void display_fastboot_image_on_screen(void)
+{
+    unsigned i = 0;
+    unsigned bytes_per_bpp;
+    unsigned image_base;
+#if DISPLAY_TYPE_MIPI
+    char *image = NULL;
+#endif
+
+    if (!config) {
+        dprintf(CRITICAL,"NULL configuration, image cannot be displayed\n");
+        return;
+    }
+    fbcon_clear(); // clear screen with Black color
+    bytes_per_bpp = ((config->bpp) / 8);
+
+    //Show fastboot image 1
+    image_base=(702*1080)+319;
+    image = fastboot_logo1;
+    
+    if (bytes_per_bpp == 3) {
+        for (i = 0; i < FAIRPHONE_FASTBOOT_IMAGE_1_HEIGHT; i++) {
+            memcpy (config->base + ((image_base + (i * (config->width))) * bytes_per_bpp),
+            image + (i * FAIRPHONE_FASTBOOT_IMAGE_1_WIDTH * bytes_per_bpp),
+            FAIRPHONE_FASTBOOT_IMAGE_1_WIDTH * bytes_per_bpp);
+        }
+    }
+
+    //Show fastboot image 2
+    image_base=(905*1080)+475;
+    image = fastboot_logo2;
+    
+    if (bytes_per_bpp == 3) {
+        for (i = 0; i < FAIRPHONE_FASTBOOT_IMAGE_2_HEIGHT; i++) {
+            memcpy (config->base + ((image_base + (i * (config->width))) * bytes_per_bpp),
+            image + (i * FAIRPHONE_FASTBOOT_IMAGE_2_WIDTH * bytes_per_bpp),
+            FAIRPHONE_FASTBOOT_IMAGE_2_WIDTH * bytes_per_bpp);
+        }
+    }
+
+    //Show fastboot image 3
+    image_base=(1191*1080)+502;
+    image = fastboot_logo3;
+    
+    if (bytes_per_bpp == 3) {
+        for (i = 0; i < FAIRPHONE_FASTBOOT_IMAGE_3_HEIGHT; i++) {
+            memcpy (config->base + ((image_base + (i * (config->width))) * bytes_per_bpp),
+            image + (i * FAIRPHONE_FASTBOOT_IMAGE_3_WIDTH * bytes_per_bpp),
+            FAIRPHONE_FASTBOOT_IMAGE_3_WIDTH * bytes_per_bpp);
+        }
+    }
+
+    //Show fastboot image 4
+    image_base=(1720*1080)+450;
+    image = fastboot_logo4;
+    
+    if (bytes_per_bpp == 3) {
+        for (i = 0; i < FAIRPHONE_FASTBOOT_IMAGE_4_HEIGHT; i++) {
+            memcpy (config->base + ((image_base + (i * (config->width))) * bytes_per_bpp),
+            image + (i * FAIRPHONE_FASTBOOT_IMAGE_4_WIDTH * bytes_per_bpp),
+            FAIRPHONE_FASTBOOT_IMAGE_4_WIDTH * bytes_per_bpp);
+        }
+    }
+
+    fbcon_flush();
+}
+
+//[Arima][8901][JialongJhan]Show Fastboot logo 20190418 End
+
+//[Arima][8901][JialongJhan]Show Low battery logo 20190418 Start
+void display_lowbattery_image_on_screen(void)
+{
+    unsigned i = 0;
+    unsigned bytes_per_bpp;
+    unsigned image_base;
+#if DISPLAY_TYPE_MIPI
+    char *image = NULL;
+#endif
+
+    if (!config) {
+        dprintf(CRITICAL,"NULL configuration, image cannot be displayed\n");
+        return;
+    }
+    fbcon_clear(); // clear screen with Black color
+    bytes_per_bpp = ((config->bpp) / 8);
+
+    //Show lowb battery image 1
+    image_base=(758*1080)+421;
+    image = lowbattery_logo1;
+    
+    if (bytes_per_bpp == 3) {
+        for (i = 0; i < FAIRPHONE_LOWBATTERY_IMAGE_1_HEIGHT; i++) {
+            memcpy (config->base + ((image_base + (i * (config->width))) * bytes_per_bpp),
+            image + (i * FAIRPHONE_LOWBATTERY_IMAGE_1_WIDTH * bytes_per_bpp),
+            FAIRPHONE_LOWBATTERY_IMAGE_1_WIDTH * bytes_per_bpp);
+        }
+    }
+
+    //Show lowb battery image 2
+    image_base=(1246*1080)+502;
+    image = lowbattery_logo2;
+    
+    if (bytes_per_bpp == 3) {
+        for (i = 0; i < FAIRPHONE_LOWBATTERY_IMAGE_2_HEIGHT; i++) {
+            memcpy (config->base + ((image_base + (i * (config->width))) * bytes_per_bpp),
+            image + (i * FAIRPHONE_LOWBATTERY_IMAGE_2_WIDTH * bytes_per_bpp),
+            FAIRPHONE_LOWBATTERY_IMAGE_2_WIDTH * bytes_per_bpp);
+        }
+    }
+
+    //Show lowb battery image 3
+    image_base=(1452*1080)+488;
+    image = lowbattery_logo3;
+    
+    if (bytes_per_bpp == 3) {
+        for (i = 0; i < FAIRPHONE_LOWBATTERY_IMAGE_3_HEIGHT; i++) {
+            memcpy (config->base + ((image_base + (i * (config->width))) * bytes_per_bpp),
+            image + (i * FAIRPHONE_LOWBATTERY_IMAGE_3_WIDTH * bytes_per_bpp),
+            FAIRPHONE_LOWBATTERY_IMAGE_3_WIDTH * bytes_per_bpp);
+        }
+    }
+
+    //Show lowb battery image 4
+    image_base=(1623*1080)+530;
+    image = lowbattery_logo4;
+    
+    if (bytes_per_bpp == 3) {
+        for (i = 0; i < FAIRPHONE_LOWBATTERY_IMAGE_4_HEIGHT; i++) {
+            memcpy (config->base + ((image_base + (i * (config->width))) * bytes_per_bpp),
+            image + (i * FAIRPHONE_LOWBATTERY_IMAGE_4_WIDTH * bytes_per_bpp),
+            FAIRPHONE_LOWBATTERY_IMAGE_4_WIDTH * bytes_per_bpp);
+        }
+    }
+
+
+
+    fbcon_flush();
+}
+
+//[Arima][8901][JialongJhan]Show Low battery logo 20190418 End
 
 
 void display_image_on_screen(void)

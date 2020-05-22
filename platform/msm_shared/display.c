@@ -379,7 +379,7 @@ int msm_display_init(struct msm_fb_panel_data *pdata)
 
     if(boot_into_fastboot){
         mdelay(1100);// avoid fuzzy screen.
-        //display_fastboot_image_on_screen();
+        display_fastboot_image_on_screen();
         }
     else{
         display_image_on_screen();

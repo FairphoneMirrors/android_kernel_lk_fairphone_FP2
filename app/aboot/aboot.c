@@ -5100,11 +5100,10 @@ int splash_screen_mmc()
 
 	base = (uint8_t *) fb_display->base;
 
-	if (mmc_read(ptn + PLL_CODES_OFFSET, (uint32_t *)(base + LOGO_IMG_OFFSET), blocksize)) {
+	if (mmc_read(ptn , (uint32_t *)(base + LOGO_IMG_OFFSET), blocksize)) {
 		dprintf(CRITICAL, "ERROR: Cannot read splash image header\n");
 		return -1;
 	}
-
 	header = (struct logo_img_header *)(base + LOGO_IMG_OFFSET);
 	if (splash_screen_check_header(header)) {
 		dprintf(CRITICAL, "ERROR: Splash image header invalid\n");
@@ -5136,7 +5135,7 @@ int splash_screen_mmc()
 				return -1;
 			}
 
-			if (mmc_read(ptn + PLL_CODES_OFFSET + blocksize, (uint32_t *)(base + blocksize), readsize)) {
+			if (mmc_read(ptn + blocksize, (uint32_t *)(base + blocksize), readsize)) {
 				dprintf(CRITICAL, "ERROR: Cannot read splash image from partition\n");
 				return -1;
 			}
@@ -5498,33 +5497,6 @@ void aboot_init(const struct app_descriptor *app)
 		}
 	}
 
-	/* Display splash screen if enabled */
-#if DISPLAY_SPLASH_SCREEN
-#if NO_ALARM_DISPLAY
-	if (!check_alarm_boot()) {
-#endif
-		dprintf(SPEW, "Display Init: Start\n");
-#if DISPLAY_HDMI_PRIMARY
-	if (!strlen(device.display_panel))
-		strlcpy(device.display_panel, DISPLAY_PANEL_HDMI,
-			sizeof(device.display_panel));
-#endif
-#if ENABLE_WBC
-		/* Wait if the display shutdown is in progress */
-		while(pm_app_display_shutdown_in_prgs());
-		if (!pm_appsbl_display_init_done())
-			target_display_init(device.display_panel);
-		else
-			display_image_on_screen();
-#else
-		target_display_init(device.display_panel);
-#endif
-		dprintf(SPEW, "Display Init: Done\n");
-#if NO_ALARM_DISPLAY
-	}
-#endif
-#endif
-
 	target_serialno((unsigned char *) sn_buf);
 	dprintf(SPEW,"serial number: %s\n",sn_buf);
 
@@ -5601,6 +5573,34 @@ void aboot_init(const struct app_descriptor *app)
 	}
 #endif
 
+	/* Display splash screen if enabled */
+#if DISPLAY_SPLASH_SCREEN
+#if NO_ALARM_DISPLAY
+	if (!check_alarm_boot()) {
+#endif
+		dprintf(SPEW, "Display Init: Start\n");
+#if DISPLAY_HDMI_PRIMARY
+	if (!strlen(device.display_panel))
+		strlcpy(device.display_panel, DISPLAY_PANEL_HDMI,
+			sizeof(device.display_panel));
+#endif
+#if ENABLE_WBC
+		/* Wait if the display shutdown is in progress */
+		while(pm_app_display_shutdown_in_prgs());
+		if (!pm_appsbl_display_init_done())
+			target_display_init(device.display_panel);
+		else
+			display_image_on_screen();
+#else
+		target_display_init(device.display_panel);
+#endif
+		dprintf(SPEW, "Display Init: Done\n");
+#if NO_ALARM_DISPLAY
+	}
+#endif
+#endif
+
+
 normal_boot:
 	if (!boot_into_fastboot)
 	{
@@ -5668,6 +5668,9 @@ retry_boot:
 	}
 
 fastboot:
+
+    mdelay(1000);
+    
 	/* We are here means regular boot did not happen. Start fastboot. */
 
 	/* register aboot specific fastboot commands */

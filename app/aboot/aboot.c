@@ -5456,6 +5456,8 @@ void aboot_init(const struct app_descriptor *app)
 	unsigned reboot_mode = 0;
 	int boot_err_type = 0;
 	int boot_slot = INVALID;
+	int vbat = 0;
+	char boot_vbat[MAX_RSP_SIZE];
 
 	/* Initialise wdog to catch early lk crashes */
 #if WDOG_SUPPORT
@@ -5604,6 +5606,23 @@ void aboot_init(const struct app_descriptor *app)
 normal_boot:
 	if (!boot_into_fastboot)
 	{
+		if(!target_pause_for_battery_charge())
+		{
+			vbat = target_get_battery_voltage();
+			snprintf(boot_vbat, MAX_RSP_SIZE, "%d", vbat);
+			dprintf(CRITICAL,"battery_voltage: %s\n", boot_vbat);
+			if(vbat < 3500000)
+			{
+				display_lowbattery_image_on_screen();
+                //[Arima][8901][JialongJhan] Command mode reflash screen when low battery logo shown 20190516 Start
+                msm_display_flush();
+                //[Arima][8901][JialongJhan] Command mode reflash screen when low battery logo shown 20190516 End
+				dprintf(CRITICAL,"Low battery, cannot boot up...\n");
+				mdelay(3000);
+				shutdown_device();
+			}
+		}
+
 		if (target_is_emmc_boot())
 		{
 			if(emmc_recovery_init())

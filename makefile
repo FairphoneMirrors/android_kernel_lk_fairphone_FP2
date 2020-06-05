@@ -75,6 +75,9 @@ ifeq ($(ENABLE_EARLY_ETHERNET),1)
   CFLAGS += -DENABLE_EARLY_ETHERNET=1
 endif
 
+CFLAGS += -DENABLE_PRODINFO_ACCESS=1
+
+
 CFLAGS += -DENABLE_FUSE_CHECK=1
 
 # setup toolchain prefix
@@ -181,6 +184,9 @@ ifeq ($(TARGET_USE_SYSTEM_AS_ROOT_IMAGE),1)
 else
   DEFINES += TARGET_USE_SYSTEM_AS_ROOT_IMAGE=0
 endif
+
+DEFINES += ARIMA_BOOTLOADER_VERSION=\"$(ARIMA_SW_VERSION_ABOOT)\"
+DEFINES += ARIMA_BASEBAND_VERSION=\"$(MODEM_BUILDID)\"
 
 # these need to be filled out by the project/target/platform rules.mk files
 TARGET :=

@@ -38,6 +38,7 @@
 #include <dev/udc.h>
 #include "fastboot.h"
 #include <err.h>
+#include <devinfo.h>
 
 #ifdef USB30_SUPPORT
 #include <usb30_udc.h>
@@ -638,7 +639,11 @@ static void fastboot_notify(struct udc_gadget *gadget, unsigned event)
 
 int fastboot_init(void *base, unsigned size)
 {
+#if defined(ENABLE_PRODINFO_ACCESS)
+	char sn_buf[PRODINFO_MAX_ISN_LEN + 1];
+#else
 	char sn_buf[13];
+#endif
 	thread_t *thr;
 	dprintf(INFO, "fastboot_init()\n");
 

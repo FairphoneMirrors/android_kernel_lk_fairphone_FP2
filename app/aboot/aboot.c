@@ -103,6 +103,9 @@ extern int get_target_boot_params(const char *cmdline, const char *part,
 				  char **buf);
 
 void *info_buf;
+#if defined(ENABLE_PRODINFO_ACCESS)
+void *prodinfo_buf;
+#endif
 void write_device_info_mmc(device_info *dev);
 void write_device_info_flash(device_info *dev);
 static int aboot_save_boot_hash_mmc(uint32_t image_addr, uint32_t image_size);
@@ -114,6 +117,9 @@ static void publish_getvar_multislot_vars();
 /* fastboot command function pointer */
 typedef void (*fastboot_cmd_fn) (const char *, void *, unsigned);
 bool get_perm_attr_status();
+#if defined(ENABLE_PRODINFO_ACCESS)
+void write_prod_info(prod_info *dev);
+#endif
 
 struct fastboot_cmd_desc {
 	char * name;
@@ -171,6 +177,11 @@ static const char *systemd_ffbm_mode = " systemd.unit=ffbm.target";
 static const char *alarmboot_cmdline = " androidboot.alarmboot=true";
 static const char *loglevel         = " quiet";
 static const char *battchg_pause = " androidboot.mode=charger";
+#if defined(ENABLE_PRODINFO_ACCESS)
+static const char *cust_sn_cmdline = " androidboot.customer_serialno=";
+static const char *factory_sn_cmdline = " androidboot.factory_serialno=";
+static const char *UsbAdbEnable = " androidboot.adb_enable=1";
+#endif
 static const char *auth_kernel = " androidboot.authorized_kernel=true";
 static const char *secondary_gpt_enable = " gpt";
 #ifdef MDTP_SUPPORT
@@ -265,6 +276,9 @@ static bool boot_into_ffbm;
 static char *target_boot_params = NULL;
 static bool boot_reason_alarm;
 static bool devinfo_present = true;
+#if defined(ENABLE_PRODINFO_ACCESS)
+static bool prodinfo_present = true;
+#endif
 bool boot_into_fastboot = false;
 static uint32_t dt_size = 0;
 static char *vbcmdline;
@@ -275,6 +289,10 @@ static uint32_t recovery_dtbo_size = 0;
 /* Assuming unauthorized kernel image by default */
 static int auth_kernel_img = 0;
 static device_info device = {DEVICE_MAGIC,0,0,0,0,{0},{0},{0},1,{0},0,{0}};
+
+#if defined(ENABLE_PRODINFO_ACCESS)
+static prod_info prod = {PRODINFO_MAGIC, {0}, {0}, 0};
+#endif
 
 #ifdef ENABLE_FUSE_CHECK
 static const char *fuse_blown     = " androidboot.oem.color=red";
@@ -367,7 +385,16 @@ struct getvar_partition_info part_type_known[] =
 
 char max_download_size[MAX_RSP_SIZE];
 char charger_screen_enabled[MAX_RSP_SIZE];
+#if defined(ENABLE_PRODINFO_ACCESS)
+char cust_sn_buf[PRODINFO_MAX_SSN_LEN + 1];
+char factory_sn_buf[PRODINFO_MAX_SSN_LEN + 1];
+char AdbEnable[MAX_RSP_SIZE];
+#endif
+#if defined(ENABLE_PRODINFO_ACCESS)
+char sn_buf[PRODINFO_MAX_ISN_LEN + 1];
+#else
 char sn_buf[13];
+#endif
 char display_panel_buf[MAX_PANEL_BUF_SIZE];
 char panel_display_mode[MAX_RSP_SIZE];
 char soc_version_str[MAX_RSP_SIZE];
@@ -511,6 +538,9 @@ unsigned char *update_cmdline(const char * cmdline)
 	int have_cmdline = 0;
 	unsigned char *cmdline_final = NULL;
 	int pause_at_bootup = 0;
+#if defined(ENABLE_PRODINFO_ACCESS)
+	int AdbEnable = 0;
+#endif
 	bool warm_boot = false;
 	bool gpt_exists = partition_gpt_exists();
 	int have_target_boot_params = 0;
@@ -582,6 +612,12 @@ unsigned char *update_cmdline(const char * cmdline)
 
 	cmdline_len += strlen(usb_sn_cmdline);
 	cmdline_len += strlen(sn_buf);
+#if defined(ENABLE_PRODINFO_ACCESS)
+	cmdline_len += strlen(cust_sn_cmdline);
+	cmdline_len += strlen(cust_sn_buf);
+	cmdline_len += strlen(factory_sn_cmdline);
+	cmdline_len += strlen(factory_sn_buf);
+#endif	
 
 #if VERIFIED_BOOT
 	if (VB_M <= target_get_vb_version())
@@ -627,6 +663,18 @@ unsigned char *update_cmdline(const char * cmdline)
 		pause_at_bootup = 1;
 		cmdline_len += strlen(battchg_pause);
 	}
+
+#if defined(ENABLE_PRODINFO_ACCESS)
+	if (prod.is_adb_enabled) {
+		dprintf(CRITICAL, "Device will enable adb\n");
+
+		prod.is_adb_enabled = 0;
+		write_prod_info(&prod);
+
+		AdbEnable = 1;
+		cmdline_len += strlen(UsbAdbEnable);
+	}
+#endif
 
 	if(target_use_signed_kernel() && auth_kernel_img) {
 		cmdline_len += strlen(auth_kernel);
@@ -964,6 +1012,25 @@ unsigned char *update_cmdline(const char * cmdline)
 		if (have_cmdline) --dst;
 		have_cmdline = 1;
 		while ((*dst++ = *src++));
+		
+		#if defined(ENABLE_PRODINFO_ACCESS)
+        src = cust_sn_cmdline;
+		if (have_cmdline) --dst;
+		have_cmdline = 1;
+		while ((*dst++ = *src++));
+		src = cust_sn_buf;
+		if (have_cmdline) --dst;
+		have_cmdline = 1;
+		while ((*dst++ = *src++));
+		src = factory_sn_cmdline;
+		if (have_cmdline) --dst;
+		have_cmdline = 1;
+		while ((*dst++ = *src++));
+		src = factory_sn_buf;
+		if (have_cmdline) --dst;
+		have_cmdline = 1;
+		while ((*dst++ = *src++));
+		#endif
 		if (warm_boot) {
 			if (have_cmdline) --dst;
 			src = warmboot_cmdline;
@@ -1008,6 +1075,14 @@ unsigned char *update_cmdline(const char * cmdline)
 			if (have_cmdline) --dst;
 			while ((*dst++ = *src++));
 		}
+
+#if defined(ENABLE_PRODINFO_ACCESS)
+		if (AdbEnable) {
+			src = UsbAdbEnable;
+			if (have_cmdline) --dst;
+			while ((*dst++ = *src++));
+		}
+#endif
 
 		if(target_use_signed_kernel() && auth_kernel_img) {
 			src = auth_kernel;
@@ -2673,6 +2748,83 @@ void read_device_info_mmc(struct device_info *info)
 	}
 }
 
+#if defined(ENABLE_PRODINFO_ACCESS)
+void write_prod_info_mmc(prod_info *dev)
+{
+	unsigned long long ptn = 0;
+	unsigned long long size;
+	int index = INVALID_PTN;
+	uint32_t blocksize;
+	uint8_t lun = 0;
+	uint32_t ret = 0;
+
+	if (prodinfo_present)
+		index = partition_get_index("prodinfo");
+	else
+		index = partition_get_index("aboot");
+
+	ptn = partition_get_offset(index);
+	if(ptn == 0)
+	{
+		return;
+	}
+
+	lun = partition_get_lun(index);
+	mmc_set_lun(lun);
+
+	size = partition_get_size(index);
+
+	blocksize = mmc_get_device_blocksize();
+
+	if (prodinfo_present)
+		ret = mmc_write(ptn, blocksize, (void *)prodinfo_buf);
+	else
+		ret = mmc_write((ptn + size - blocksize), blocksize, (void *)prodinfo_buf);
+	if (ret)
+	{
+		dprintf(CRITICAL, "ERROR: Cannot write prod info\n");
+		ASSERT(0);
+	}
+}
+
+void read_prod_info_mmc(struct prod_info *info)
+{
+	unsigned long long ptn = 0;
+	unsigned long long size;
+	int index = INVALID_PTN;
+	uint32_t blocksize;
+	uint32_t ret  = 0;
+
+	if ((index = partition_get_index("prodinfo")) < 0)
+	{
+		prodinfo_present = false;
+		index = partition_get_index("aboot");
+	}
+
+	ptn = partition_get_offset(index);
+	if(ptn == 0)
+	{
+		return;
+	}
+
+	mmc_set_lun(partition_get_lun(index));
+
+	size = partition_get_size(index);
+
+	blocksize = mmc_get_device_blocksize();
+
+	if (prodinfo_present)
+		ret = mmc_read(ptn, (void *)prodinfo_buf, blocksize);
+	else
+		ret = mmc_read((ptn + size - blocksize), (void *)prodinfo_buf, blocksize);
+	if (ret)
+	{
+		dprintf(CRITICAL, "ERROR: Cannot read prod info\n");
+		ASSERT(0);
+	}
+}
+#endif
+
 void write_device_info_flash(device_info *dev)
 {
 	struct device_info *info = memalign(PAGE_SIZE, ROUNDUP(BOOT_IMG_MAX_PAGE_SIZE, PAGE_SIZE));
@@ -3002,6 +3154,52 @@ void read_device_info(device_info *dev)
 		read_device_info_flash(dev);
 	}
 }
+#if defined(ENABLE_PRODINFO_ACCESS)
+void write_prod_info(prod_info *dev)
+{
+	if(target_is_emmc_boot())
+	{
+		struct prod_info *info = memalign(PAGE_SIZE, ROUNDUP(BOOT_IMG_MAX_PAGE_SIZE, PAGE_SIZE));
+		if(info == NULL)
+		{
+			dprintf(CRITICAL, "Failed to allocate memory for prod info struct\n");
+			ASSERT(0);
+		}
+		prodinfo_buf = info;
+		memcpy(info, dev, sizeof(struct prod_info));
+
+		write_prod_info_mmc(info);
+		free(info);
+	}
+}
+
+void read_prod_info(prod_info *dev)
+{
+	if(target_is_emmc_boot())
+	{
+		struct prod_info *info = memalign(PAGE_SIZE, ROUNDUP(BOOT_IMG_MAX_PAGE_SIZE, PAGE_SIZE));
+		if(info == NULL)
+		{
+			dprintf(CRITICAL, "Failed to allocate memory for prod info struct\n");
+			ASSERT(0);
+		}
+		prodinfo_buf = info;
+
+		read_prod_info_mmc(info);
+
+		if (memcmp(info->magic, PRODINFO_MAGIC, PRODINFO_MAGIC_SIZE))
+		{
+			memcpy(info->magic, PRODINFO_MAGIC, PRODINFO_MAGIC_SIZE);
+			memcpy(info->isn, "No_Serial_Number", PRODINFO_MAX_ISN_LEN);
+			memcpy(info->ssn, "No_Custer_Serial_Number", PRODINFO_MAX_SSN_LEN);
+			info->is_adb_enabled = 0;
+			write_prod_info(info);
+		}
+		memcpy(dev, info, sizeof(prod_info));
+		free(info);
+	}
+}
+#endif
 
 void reset_device_info()
 {
@@ -4824,6 +5022,16 @@ void cmd_oem_disable_charger_screen(const char *arg, void *data, unsigned size)
 	fastboot_okay("");
 }
 
+#if defined(ENABLE_PRODINFO_ACCESS)
+void CmdOemEnableAdb(const char *arg, void *data, unsigned size)
+{
+	dprintf(INFO, "Enabling Adb\n");
+	prod.is_adb_enabled = 1;
+	write_prod_info(&prod);
+	fastboot_okay("");
+}
+#endif
+
 void cmd_oem_off_mode_charger(const char *arg, void *data, unsigned size)
 {
 	char *p = NULL;
@@ -4936,6 +5144,10 @@ void cmd_oem_devinfo(const char *arg, void *data, unsigned sz)
 	fastboot_info(response);
 	snprintf(response, sizeof(response), "\tDisplay panel: %s", (device.display_panel));
 	fastboot_info(response);
+#if defined(ENABLE_PRODINFO_ACCESS)
+	snprintf(response, sizeof(response), "\tAdb enabled: %s", prod.is_adb_enabled ? "true" : "false");
+	fastboot_info(response);
+#endif
 	fastboot_okay("");
 }
 
@@ -5346,6 +5558,9 @@ void aboot_fastboot_register_commands(void)
 						{"oem run-tests", cmd_oem_runtests},
 #endif
 #endif
+#if defined(ENABLE_PRODINFO_ACCESS)
+						{"oem adb_enable", CmdOemEnableAdb},
+#endif
 						};
 
 	int fastboot_cmds_count = sizeof(cmd_list)/sizeof(cmd_list[0]);
@@ -5388,6 +5603,13 @@ void aboot_fastboot_register_commands(void)
 			device.charger_screen_enabled);
 	fastboot_publish("charger-screen-enabled",
 			(const char *) charger_screen_enabled);
+#if defined(ENABLE_PRODINFO_ACCESS)
+    read_prod_info(&prod);
+	snprintf(AdbEnable, MAX_RSP_SIZE, "%d",
+			prod.is_adb_enabled);
+	fastboot_publish("adb-enabled",
+			(const char *) AdbEnable);
+#endif
 	fastboot_publish("off-mode-charge", (const char *) charger_screen_enabled);
 	snprintf(panel_display_mode, MAX_RSP_SIZE, "%s",
 			device.display_panel);
@@ -5480,6 +5702,9 @@ void aboot_init(const struct app_descriptor *app)
 	ASSERT((MEMBASE + MEMSIZE) > MEMBASE);
 
 	read_device_info(&device);
+#if defined(ENABLE_PRODINFO_ACCESS)
+	read_prod_info(&prod);
+#endif
 	read_allow_oem_unlock(&device);
 
 	/* Detect multi-slot support */
@@ -5500,8 +5725,18 @@ void aboot_init(const struct app_descriptor *app)
 	}
 
 	target_serialno((unsigned char *) sn_buf);
+#if defined(ENABLE_PRODINFO_ACCESS)
+	dprintf(CRITICAL,"serial number: %s\n",sn_buf);
+#else
 	dprintf(SPEW,"serial number: %s\n",sn_buf);
-
+#endif
+#if defined(ENABLE_PRODINFO_ACCESS)
+    read_prod_info(&prod);
+    snprintf((char *)cust_sn_buf, PRODINFO_MAX_SSN_LEN + 1, "%s", prod.ssn);
+	dprintf(CRITICAL,"customer serial number: %s\n", cust_sn_buf);
+	snprintf((char *)factory_sn_buf, PRODINFO_MAX_ISN_LEN + 1, "%s", prod.isn);
+	dprintf(CRITICAL,"factory serial number: %s\n", factory_sn_buf);
+#endif
 	memset(display_panel_buf, '\0', MAX_PANEL_BUF_SIZE);
 
 	/*

@@ -60,4 +60,23 @@ struct device_info
 	uint32_t user_public_key_length;
 	uint8_t user_public_key[MAX_USER_KEY_SIZE];
 };
+/*[20200605][TracyChui] Implement get Serial Number start*/
+#if defined(ENABLE_PRODINFO_ACCESS)
+typedef struct prod_info prod_info;
+
+#define PRODINFO_MAGIC "ANDROID!PRODINFO"
+#define PRODINFO_MAGIC_SIZE 16  
+#define PRODINFO_MAX_ISN_LEN 32 
+#define PRODINFO_MAX_SSN_LEN 32 
+struct prod_info
+{
+	unsigned char magic[PRODINFO_MAGIC_SIZE];
+	unsigned char isn[PRODINFO_MAX_ISN_LEN];
+	unsigned char ssn[PRODINFO_MAX_SSN_LEN];
+	bool is_adb_enabled;
+};
+
+void read_prod_info(prod_info *dev);
+#endif
+/*[20200605][TracyChui] Implement get Serial Number end*/
 #endif

@@ -38,6 +38,9 @@
 #include <dev/udc.h>
 #include "fastboot.h"
 #include <err.h>
+/*[20200605][TracyChui] Implement get Serial Number start*/
+#include <devinfo.h>
+/*[20200605][TracyChui] Implement get Serial Number end*/
 
 #ifdef USB30_SUPPORT
 #include <usb30_udc.h>
@@ -638,7 +641,13 @@ static void fastboot_notify(struct udc_gadget *gadget, unsigned event)
 
 int fastboot_init(void *base, unsigned size)
 {
+/*[20200605][TracyChui] Implement get Serial Number start*/
+#if defined(ENABLE_PRODINFO_ACCESS)
+	char sn_buf[PRODINFO_MAX_ISN_LEN + 1];
+#else
 	char sn_buf[13];
+#endif
+/*[20200605][TracyChui] Implement get Serial Number end*/
 	thread_t *thr;
 	dprintf(INFO, "fastboot_init()\n");
 

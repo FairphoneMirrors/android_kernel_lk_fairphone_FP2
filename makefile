@@ -81,6 +81,10 @@ endif
 CFLAGS += -DENABLE_FUSE_CHECK=1
 # [Arima_8910][jhchen] 20181031 end
 
+#[20200605][TracyChui] Implement get Serial Number start
+CFLAGS += -DENABLE_PRODINFO_ACCESS=1
+#[20200605][TracyChui] Implement get Serial Number end
+
 # setup toolchain prefix
 TOOLCHAIN_PREFIX ?= arm-eabi-
 CFLAGS += -fstack-protector-all
@@ -185,6 +189,11 @@ ifeq ($(TARGET_USE_SYSTEM_AS_ROOT_IMAGE),1)
 else
   DEFINES += TARGET_USE_SYSTEM_AS_ROOT_IMAGE=0
 endif
+
+#[20200605][TracyChui]Show SW and modem version and internal storage size on fastboot screen start
+DEFINES += ARIMA_BOOTLOADER_VERSION=\"$(ARIMA_SW_VERSION_ABOOT)\"
+DEFINES += ARIMA_BASEBAND_VERSION=\"$(MODEM_BUILDID)\"
+#[20200605][TracyChui]Show SW and modem version and internal storage size on fastboot screen end
 
 # these need to be filled out by the project/target/platform rules.mk files
 TARGET :=

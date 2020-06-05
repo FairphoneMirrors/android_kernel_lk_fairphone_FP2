@@ -61,6 +61,9 @@
 #include "target/display.h"
 #include "recovery.h"
 #include <ab_partition_parser.h>
+/*[20200605][TracyChui] Implement get Serial Number start*/
+#include <devinfo.h>
+/*[20200605][TracyChui] Implement get Serial Number end*/
 
 #if LONG_PRESS_POWER_ON
 #include <shutdown_detect.h>
@@ -418,11 +421,22 @@ void target_init(void)
 
 void target_serialno(unsigned char *buf)
 {
+/*[20200605][TracyChui] Implement get Serial Number start*/
+#if defined(ENABLE_PRODINFO_ACCESS)
+	prod_info prod = {PRODINFO_MAGIC, {0}, {0}, 0};
+	if (target_is_emmc_boot()) {
+		read_prod_info(&prod);
+		snprintf((char *)buf, PRODINFO_MAX_SSN_LEN + 1, "%s", prod.ssn);
+	}
+#else
 	uint32_t serialno;
 	if (target_is_emmc_boot()) {
 		serialno = mmc_get_psn();
 		snprintf((char *)buf, 13, "%x", serialno);
 	}
+#endif
+/*[20200605][TracyChui] Implement get Serial Number end */
+
 }
 
 unsigned board_machtype(void)

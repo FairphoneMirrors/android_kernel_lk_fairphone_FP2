@@ -3312,6 +3312,36 @@ static void set_device_unlock(int type, bool status)
 	//<2018/10/16-EricLin
 }
 
+/*[TracyChui] Add lock unlock fastboot commnad to skip ui check 20200611 start*/
+#if defined(ENABLE_LOCK_UNLOCK_SKIP_UI_CHECK)
+static void set_device_unlock_skip_ui_check(int type, bool status)
+{
+	int is_unlocked = -1;
+	char response[MAX_RSP_SIZE];
+
+	/* check device unlock status if it is as expected */
+	if (type == UNLOCK)
+		is_unlocked = device.is_unlocked;
+#if VERIFIED_BOOT || VERIFIED_BOOT_2
+	if(VB_M <= target_get_vb_version() &&
+		type == UNLOCK_CRITICAL)
+	{
+			is_unlocked = device.is_unlock_critical;
+	}
+#endif
+	if (is_unlocked == status) {
+		snprintf(response, sizeof(response), "\tDevice already : %s", (status ? "unlocked!" : "locked!"));
+		fastboot_info(response);
+		fastboot_okay("");
+		return;
+	}
+
+	set_device_unlock_value(type, status);
+	fastboot_okay("");
+}
+#endif
+/*[TracyChui] Add lock unlock fastboot commnad to skip ui check 20200611 end */
+
 static bool critical_flash_allowed(const char * entry)
 {
 	uint32_t i = 0;
@@ -4981,6 +5011,15 @@ void cmd_oem_unlock(const char *arg, void *data, unsigned sz)
 	set_device_unlock(UNLOCK, TRUE);
 }
 
+/*[TracyChui] Add lock unlock fastboot commnad to skip ui check 20200611 start*/
+#if defined(ENABLE_LOCK_UNLOCK_SKIP_UI_CHECK)
+void cmd_oem_unlock_skip_ui_check(const char *arg, void *data, unsigned sz)
+{
+	set_device_unlock_skip_ui_check(UNLOCK, TRUE);
+}
+#endif
+/*[TracyChui] Add lock unlock fastboot commnad to skip ui check 20200611 end */
+
 void cmd_oem_unlock_go(const char *arg, void *data, unsigned sz)
 {
 	if(!device.is_unlocked) {
@@ -5031,6 +5070,15 @@ void cmd_oem_lock(const char *arg, void *data, unsigned sz)
 {
 	set_device_unlock(UNLOCK, FALSE);
 }
+
+/*[TracyChui] Add lock unlock fastboot commnad to skip ui check 20200611 start*/
+#if defined(ENABLE_LOCK_UNLOCK_SKIP_UI_CHECK)
+void cmd_oem_lock_skip_ui_check(const char *arg, void *data, unsigned sz)
+{
+	set_device_unlock_skip_ui_check(UNLOCK, FALSE);
+}
+#endif
+/*[TracyChui] Add lock unlock fastboot commnad to skip ui check 20200611 end */
 
 void cmd_oem_devinfo(const char *arg, void *data, unsigned sz)
 {
@@ -5436,6 +5484,12 @@ void aboot_fastboot_register_commands(void)
 						{"oem unlock", cmd_oem_unlock},
 						{"oem unlock-go", cmd_oem_unlock_go},
 						{"oem lock", cmd_oem_lock},
+/*[TracyChui] Add lock unlock fastboot commnad to skip ui check 20200611 start */
+#if defined(ENABLE_LOCK_UNLOCK_SKIP_UI_CHECK)
+						{"oem 8901_unlock", cmd_oem_unlock_skip_ui_check},
+						{"oem 8901_lock", cmd_oem_lock_skip_ui_check},
+#endif
+/*[TracyChui] Add lock unlock fastboot commnad to skip ui check 20200611 end */
 						{"flashing unlock", cmd_oem_unlock},
 						{"flashing lock", cmd_oem_lock},
 						{"flashing lock_critical", cmd_flashing_lock_critical},

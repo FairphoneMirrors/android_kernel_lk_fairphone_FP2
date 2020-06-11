@@ -85,6 +85,10 @@ CFLAGS += -DENABLE_FUSE_CHECK=1
 CFLAGS += -DENABLE_PRODINFO_ACCESS=1
 #[20200605][TracyChui] Implement get Serial Number end
 
+#[TracyChui] Add lock unlock fastboot commnad to skip ui check 20200611 start
+CFLAGS += -DENABLE_LOCK_UNLOCK_SKIP_UI_CHECK=1
+#[TracyChui] Add lock unlock fastboot commnad to skip ui check 20200611 end
+
 # setup toolchain prefix
 TOOLCHAIN_PREFIX ?= arm-eabi-
 CFLAGS += -fstack-protector-all

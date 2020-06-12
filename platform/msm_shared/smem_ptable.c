@@ -347,3 +347,66 @@ uint64_t smem_get_ddr_size()
 
 	return size;
 }
+
+/*[TracyChui]Show memory information on fastboot screen 20200612 start */
+//BOOT.BF.3.3.2\boot_images\core\api\boot\ddr_common.h
+/** DDR manufacturers. */
+typedef enum
+{
+  RESERVED_0,                        /**< Reserved for future use. */
+  SAMSUNG,                           /**< Samsung. */
+  QIMONDA,                           /**< Qimonda. */
+  ELPIDA,                            /**< Elpida Memory, Inc. */
+  ETRON,                             /**< Etron Technology, Inc. */
+  NANYA,                             /**< Nanya Technology Corporation. */
+  HYNIX,                             /**< Hynix Semiconductor Inc. */
+  MOSEL,                             /**< Mosel Vitelic Corporation. */
+  WINBOND,                           /**< Winbond Electronics Corp. */
+  ESMT,                              /**< Elite Semiconductor Memory Technology Inc. */
+  RESERVED_1,                        /**< Reserved for future use. */
+  SPANSION,                          /**< Spansion Inc. */
+  SST,                               /**< Silicon Storage Technology, Inc. */
+  ZMOS,                              /**< ZMOS Technology, Inc. */
+  INTEL,                             /**< Intel Corporation. */
+  NUMONYX = 254,                     /**< Numonyx, acquired by Micron Technology, Inc. */
+  MICRON = 255,                      /**< Micron Technology, Inc. */
+  DDR_MANUFACTURES_MAX = 0x7FFFFFFF  /**< Forces the enumerator to 32 bits. */
+} DDR_MANUFACTURES;
+
+//uint32_t smem_get_ddr_manufacturer_id()
+void smem_get_ddr_manufacturer_id(unsigned char *buf)
+{
+	uint32_t manufacturer_id = -1;
+	uint32_t manufacturer_id_len = sizeof(manufacturer_id);
+	unsigned ret;
+
+	ret = smem_read_alloc_entry(SMEM_ID_VENDOR2,
+								&manufacturer_id,
+								manufacturer_id_len);
+	if (ret)
+	{
+		dprintf(CRITICAL, "Failed to read SMEM_ID_VENDOR2 (%d)", ret);
+	}
+
+	switch(manufacturer_id)
+	{
+		case SAMSUNG:
+			snprintf((char *)buf, 64, "SAMSUNG");
+			break;
+		case ELPIDA:
+			snprintf((char *)buf, 64, "ELPIDA");
+			break;
+		case HYNIX:
+			snprintf((char *)buf, 64, "HYNIX");
+			break;
+		case MICRON:
+			snprintf((char *)buf, 64, "MICRON");
+			break;
+		default:
+			snprintf((char *)buf, 64, "OTHERS");
+			break;
+	}
+
+	dprintf(CRITICAL,"manufacturer_id=%d, %s\n", manufacturer_id, buf);
+	/*[TracyChui]Show memory information on fastboot screen 20200612 end */
+}

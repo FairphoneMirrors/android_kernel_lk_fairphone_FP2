@@ -548,6 +548,8 @@ typedef enum {
 
 	SMEM_BOARD_INFO_LOCATION = 137,
 
+	SMEM_ID_VENDOR2 = 136,
+	
 	SMEM_SMD_FIFO_BASE_ID = 338,
 
 	SMEM_USABLE_RAM_PARTITION_TABLE = 402,
@@ -722,5 +724,6 @@ uint32_t smem_get_ram_ptable_len(void);
 void* smem_get_alloc_entry(smem_mem_type_t type, uint32_t* size);
 uint32_t get_ddr_start();
 uint64_t smem_get_ddr_size();
+void smem_get_ddr_manufacturer_id(unsigned char *buf);
 size_t smem_get_hw_platform_name(void *buf, uint32 buf_size);
 #endif				/* __PLATFORM_MSM_SHARED_SMEM_H */

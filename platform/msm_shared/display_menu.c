@@ -42,6 +42,7 @@
 #include <sys/types.h>
 #include <../../../app/aboot/devinfo.h>
 #include <../../../app/aboot/recovery.h>
+#include <mmu.h>
 
 #define TITLE_MSG "<!>\n\n"
 
@@ -507,6 +508,43 @@ void display_fastboot_menu_renew(struct select_msg_info *fastboot_msg_info)
 	snprintf(msg, sizeof(msg), "SERIAL NUMBER - %s\n", msg_buf);
 	display_fbcon_menu_message(msg, FBCON_COMMON_MSG, common_factor, 0);
 
+	dprintf(CRITICAL,"smem_get_ddr_size=%llu\n", smem_get_ddr_size());
+	if (smem_get_ddr_size() == MEM_3GB) {
+		snprintf(msg, sizeof(msg), "INTERNAL STORAGE SIZE - 32G\n");
+	} else if (smem_get_ddr_size() > MEM_3GB) {
+	    if (smem_get_ddr_size() < MEM_4GB)
+	    	{
+		     snprintf(msg, sizeof(msg), "INTERNAL STORAGE SIZE - 64G\n");
+	    	}
+		else
+			{
+             snprintf(msg, sizeof(msg), "INTERNAL STORAGE SIZE - \n");
+			}
+	} else {
+		snprintf(msg, sizeof(msg), "INTERNAL STORAGE SIZE - UNKNOWN\n");
+	}
+	display_fbcon_menu_message(msg, FBCON_COMMON_MSG, common_factor, 0);
+	
+	memset(msg_buf, 0, sizeof(msg_buf));
+	smem_get_ddr_manufacturer_id((unsigned char *) msg_buf);
+	dprintf(CRITICAL,"smem_get_ddr_size=%llu\n", smem_get_ddr_size());
+	if (smem_get_ddr_size() == MEM_3GB) {
+		snprintf(msg, sizeof(msg), "MAIN MEMORY SIZE AND VENDOR - 3G\n");
+	} else if (smem_get_ddr_size() > MEM_3GB) {
+	    if (smem_get_ddr_size() < MEM_4GB)
+	    	{
+		     snprintf(msg, sizeof(msg), "MAIN MEMORY SIZE AND VENDOR - 4G %s\n", msg_buf);
+	    	}
+		else
+			{
+             snprintf(msg, sizeof(msg), "MAIN MEMORY SIZE AND VENDOR - %s\n", msg_buf);
+			}
+	} else {
+		snprintf(msg, sizeof(msg), "MAIN MEMORY SIZE AND VENDOR - %s\n", msg_buf);
+	}
+	display_fbcon_menu_message(msg, FBCON_COMMON_MSG, common_factor, 0);
+
+	
 	snprintf(msg, sizeof(msg), "SECURE BOOT - %s\n",
 		is_secure_boot_enable()? "enabled":"disabled");
 	display_fbcon_menu_message(msg, FBCON_COMMON_MSG, common_factor, 0);

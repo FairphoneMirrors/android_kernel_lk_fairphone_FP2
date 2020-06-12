@@ -8,8 +8,10 @@ INCLUDES += -I$(LK_TOP_DIR)/app/aboot
 
 PLATFORM := msm8953
 
+#[TracyChui]Modified MEMSIZE from 10MB to 11MB for download GSI 20200611 start
 MEMBASE := 0x8F600000 # SDRAM
-MEMSIZE := 0x00A00000 # 10MB
+MEMSIZE := 0x00B00000 #0x00A00000 # 10MB
+#[TracyChui]Modified MEMSIZE from 10MB to 11MB for download GSI 20200611 end
 
 ifneq (,$(findstring SECURE_CODE_MEM,$(DEFINES)))
 MEMRWOFF:= 0x8F700000 # MEMBASE + 1MB(section page size)

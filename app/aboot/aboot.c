@@ -95,6 +95,7 @@
 #include <menu_keys_detect.h>
 #include <display_menu.h>
 #include "fastboot_test.h"
+#include <mmu.h>
 
 extern  bool target_use_signed_kernel(void);
 extern void platform_uninit(void);
@@ -201,6 +202,8 @@ static const char *warmboot_cmdline = " qpnp-power-on.warm_boot=1";
 static const char *baseband_apq_nowgr   = " androidboot.baseband=baseband_apq_nowgr";
 static const char *androidboot_slot_suffix = " androidboot.slot_suffix=";
 static const char *skip_ramfs = " skip_initramfs";
+static const char *memory_config_3G = " androidboot.memory_config=32GB,3GB";
+static const char *memory_config_4G = " androidboot.memory_config=64GB,4GB";
 
 #if HIBERNATION_SUPPORT
 static const char *resume = " resume=/dev/mmcblk0p";
@@ -765,6 +768,15 @@ unsigned char *update_cmdline(const char * cmdline)
 			break;
 	}
 
+   if(smem_get_ddr_size() == MEM_3GB )
+       {
+           cmdline_len += strlen(memory_config_3G);
+       }
+   else
+       {
+           cmdline_len += strlen(memory_config_4G);
+       }
+
 #if ENABLE_DISPLAY
 	if (cmdline) {
 		if ((strstr(cmdline, DISPLAY_DEFAULT_PREFIX) == NULL) &&
@@ -969,6 +981,18 @@ unsigned char *update_cmdline(const char * cmdline)
 			while ((*dst++ = *src++));
 						break;
 		}
+       if(smem_get_ddr_size() == MEM_3GB )
+       {
+           src = memory_config_3G;
+           if (have_cmdline) --dst;
+           while ((*dst++ = *src++));
+       }
+       else
+       {
+           src = memory_config_4G;
+           if (have_cmdline) --dst;
+           while ((*dst++ = *src++));
+       }
 
 #if VERIFIED_BOOT
 		if (VB_M <= target_get_vb_version())

@@ -250,6 +250,17 @@ static const char *PCBA_STAGE_5 = " androidboot.pcbastage=MP-8903MB_001";
 static const char *PCBA_STAGE_F = " androidboot.pcbastage=Reserved";
 //>20200424-michaellin
 
+//<2020/07/02-tedwu, Add RF variants in system properties
+#define RF_VARIANT_PIN_0	 89
+#define RF_VARIANT_PIN_1	141
+
+static const char *rfvar_prefix = " androidboot.rfvariant=";
+static const char *rfvar_0      = "B13";
+static const char *rfvar_1      = "B28B";
+static const char *rfvar_2      = "B28A";
+static const char *rfvar_3      = "03";
+//>2020/07/02-tedwu, Add RF variants in system properties
+
 #if VERIFIED_BOOT
 static const char *verity_mode = " androidboot.veritymode=";
 static const char *verified_state= " androidboot.verifiedbootstate=";
@@ -535,6 +546,20 @@ uint32_t GetPcbaVariant(void)
 }
 //>20200424-michaellin
 
+//<2020/07/02-tedwu, Add RF variant in system properties
+uint32_t get_rf_variant(void)
+{
+	static uint32_t rf_id = 0xFF;
+
+	if (0xFF == rf_id) {
+		rf_id = (gpio_status(RF_VARIANT_PIN_1) << 1) + gpio_status(RF_VARIANT_PIN_0);
+	}
+	dprintf(CRITICAL, "RF Variant ID: %d\n", rf_id);
+
+	return rf_id;
+}
+//>2020/07/02-tedwu, Add RF variant in system properties
+
 unsigned char *update_cmdline(const char * cmdline)
 {
 	int cmdline_len = 0;
@@ -578,6 +603,10 @@ unsigned char *update_cmdline(const char * cmdline)
 #if VERIFIED_BOOT
 	uint32_t boot_state = RED;
 #endif
+
+	//<2020/07/02-tedwu, Add RF variant in system properties
+	const char *pRFvar[4] = {rfvar_0, rfvar_1, rfvar_2, rfvar_3};
+	//>2020/07/02-tedwu, Add RF variant in system properties
 
 #if USE_LE_SYSTEMD
 	is_systemd_present=true;
@@ -776,6 +805,11 @@ unsigned char *update_cmdline(const char * cmdline)
 			break;
 	}
 	//>20200424-michaellin
+
+	//<2020/07/02-tedwu, Add RF variant in system properties
+	cmdline_len += strlen(rfvar_prefix);
+	cmdline_len += strlen(pRFvar[get_rf_variant()]);
+	//>2020/07/02-tedwu, Add RF variant in system properties
 
 	/* [TracyChui]Add memory_config property 20200615 start */
 	if(smem_get_ddr_size() == MEM_3GB )
@@ -996,6 +1030,15 @@ unsigned char *update_cmdline(const char * cmdline)
 						break;
 		}
 		//>20200424-michaellin
+
+		//<2020/07/02-tedwu, Add RF variant in system properties
+		src = rfvar_prefix;
+		if (have_cmdline) --dst;
+		while ((*dst++ = *src++));
+		src = pRFvar[get_rf_variant()];
+		if (have_cmdline) --dst;
+        while ((*dst++ = *src++));
+		//>2020/07/02-tedwu, Add RF variant in system properties
 
 		/* [TracyChui]Add memory_config property 20200615 start */
 		if(smem_get_ddr_size() == MEM_3GB )

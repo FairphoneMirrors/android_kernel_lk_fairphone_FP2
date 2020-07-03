@@ -238,6 +238,15 @@ static const char *PCBA_STAGE_4 = " androidboot.pcbastage=MP";
 static const char *PCBA_STAGE_5 = " androidboot.pcbastage=MP-8903MB_001";
 static const char *PCBA_STAGE_F = " androidboot.pcbastage=Reserved";
 
+#define RF_VARIANT_PIN_0     89
+#define RF_VARIANT_PIN_1    141
+
+static const char *rfvar_prefix = " androidboot.rfvariant=";
+static const char *rfvar_0      = "B13";
+static const char *rfvar_1      = "B28B";
+static const char *rfvar_2      = "B28A";
+static const char *rfvar_3      = "03";
+
 #if VERIFIED_BOOT
 static const char *verity_mode = " androidboot.veritymode=";
 static const char *verified_state= " androidboot.verifiedbootstate=";
@@ -535,6 +544,18 @@ uint32_t GetPcbaVariant(void)
 	return pcba_stage;
 }
 
+uint32_t get_rf_variant(void)
+{
+   static uint32_t rf_id = 0xFF;
+
+   if (0xFF == rf_id) {
+       rf_id = (gpio_status(RF_VARIANT_PIN_1) << 1) + gpio_status(RF_VARIANT_PIN_0);
+   }
+   dprintf(CRITICAL, "RF Variant ID: %d\n", rf_id);
+
+   return rf_id;
+}
+
 unsigned char *update_cmdline(const char * cmdline)
 {
 	int cmdline_len = 0;
@@ -576,6 +597,8 @@ unsigned char *update_cmdline(const char * cmdline)
 #if VERIFIED_BOOT
 	uint32_t boot_state = RED;
 #endif
+
+	const char *pRFvar[4] = {rfvar_0, rfvar_1, rfvar_2, rfvar_3};
 
 #if USE_LE_SYSTEMD
 	is_systemd_present=true;
@@ -767,6 +790,9 @@ unsigned char *update_cmdline(const char * cmdline)
 			cmdline_len += strlen(PCBA_STAGE_F);
 			break;
 	}
+
+   cmdline_len += strlen(rfvar_prefix);
+   cmdline_len += strlen(pRFvar[get_rf_variant()]);
 
    if(smem_get_ddr_size() == MEM_3GB )
        {
@@ -981,6 +1007,13 @@ unsigned char *update_cmdline(const char * cmdline)
 			while ((*dst++ = *src++));
 						break;
 		}
+       src = rfvar_prefix;
+       if (have_cmdline) --dst;
+       while ((*dst++ = *src++));
+       src = pRFvar[get_rf_variant()];
+       if (have_cmdline) --dst;
+       while ((*dst++ = *src++));
+
        if(smem_get_ddr_size() == MEM_3GB )
        {
            src = memory_config_3G;

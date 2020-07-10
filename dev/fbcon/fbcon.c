@@ -630,7 +630,7 @@ void display_default_image_on_screen(void)
     //Show logo's top parts end.
     
     //Show logo's bottom parts.
-    image_base=(1884*1080)+403;
+    image_base=(1843*1080)+296;
     image = logo_bottom;
     
     if (bytes_per_bpp == 3) {
@@ -799,13 +799,15 @@ void display_image_on_screen(void)
 {
 #if DISPLAY_TYPE_MIPI
 	int fetch_image_from_partition();
-
-	if (fetch_image_from_partition() < 0) {
-		display_default_image_on_screen();
-	} else {
-		/* data has been put into the right place */
-		fbcon_flush();
-	}
+//[Arima][8901][JialongJhan][20200710]let bootlogo shows from lk for OTA Start
+	display_default_image_on_screen();
+//	if (fetch_image_from_partition() < 0) {
+//		display_default_image_on_screen();
+//	} else {
+//		/* data has been put into the right place */
+//		fbcon_flush();
+//	}
+//[Arima][8901][JialongJhan][20200710]let bootlogo shows from lk for OTA End
 #else
 	display_default_image_on_screen();
 #endif

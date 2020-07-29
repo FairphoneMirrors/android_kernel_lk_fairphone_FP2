@@ -423,7 +423,7 @@ void target_serialno(unsigned char *buf)
 {
 /*[20200605][TracyChui] Implement get Serial Number start*/
 #if defined(ENABLE_PRODINFO_ACCESS)
-	prod_info prod = {PRODINFO_MAGIC, {0}, {0}, 0, 0};
+	prod_info prod = {PRODINFO_MAGIC, {0}, {0}, 0};
 	if (target_is_emmc_boot()) {
 		read_prod_info(&prod);
 		snprintf((char *)buf, PRODINFO_MAX_SSN_LEN + 1, "%s", prod.ssn);

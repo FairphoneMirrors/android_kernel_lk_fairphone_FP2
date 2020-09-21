@@ -85,9 +85,13 @@ CFLAGS += -DENABLE_FUSE_CHECK=1
 CFLAGS += -DENABLE_PRODINFO_ACCESS=1
 #[20200605][TracyChui] Implement get Serial Number end
 
+#[TracyChui] Disable lock/unlock commend on user mode 20200921 start
 #[TracyChui] Add lock unlock fastboot commnad to skip ui check 20200611 start
+ifneq ($(TARGET_BUILD_VARIANT),user)
 CFLAGS += -DENABLE_LOCK_UNLOCK_SKIP_UI_CHECK=1
+endif
 #[TracyChui] Add lock unlock fastboot commnad to skip ui check 20200611 end
+#[TracyChui] Disable lock/unlock commend on user mode 20200921 end
 
 # setup toolchain prefix
 TOOLCHAIN_PREFIX ?= arm-eabi-
@@ -195,8 +199,8 @@ else
 endif
 
 #[20200605][TracyChui]Show SW and modem version and internal storage size on fastboot screen start
-DEFINES += ARIMA_BOOTLOADER_VERSION=\"$(ARIMA_SW_VERSION_ABOOT)\"
-DEFINES += ARIMA_BASEBAND_VERSION=\"$(MODEM_BUILDID)\"
+DEFINES += ARIMA_BOOTLOADER_VERSION=\"8901.3.val.0001-SS.20200819\"
+DEFINES += ARIMA_BASEBAND_VERSION=\"MPSS.TA.3.1.c1-00021-8953_GEN_PACK-2\"
 #[20200605][TracyChui]Show SW and modem version and internal storage size on fastboot screen end
 
 # these need to be filled out by the project/target/platform rules.mk files

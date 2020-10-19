@@ -169,4 +169,10 @@ bool partition_gpt_exists();
 /* For Debugging */
 void partition_dump(void);
 
+/* Get Partition Count */
+unsigned partition_get_partition_count();
+
+/* Read Partition entried list pointer */
+struct partition_entry* partition_get_partition_entries();
+
 #endif

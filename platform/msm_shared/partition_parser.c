@@ -88,6 +88,16 @@ static unsigned partition_count;
 /* this is a pointer to ptn_entries_buffer */
 static unsigned char *new_buffer = NULL;
 
+unsigned partition_get_partition_count()
+{
+	return partition_count;
+}
+
+struct partition_entry* partition_get_partition_entries()
+{
+	return partition_entries;
+}
+
 unsigned int partition_read_table()
 {
 	unsigned int ret;

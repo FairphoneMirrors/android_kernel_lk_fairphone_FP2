@@ -41,12 +41,14 @@ ABOOT_OUT := $(TARGET_OUT_INTERMEDIATES)/ABOOT_OBJ
 $(ABOOT_OUT):
 	$(hide) mkdir -p $(ABOOT_OUT)
 
-ABOOT_CLEAN:
+ABOOT_CLEAN := $(ABOOT_OUT)/aboot_clean.timestamp
+$(ABOOT_CLEAN):
 	$(hide) rm -f $(TARGET_ABOOT_ELF)
+	@touch $(ABOOT_CLEAN)
 
 # ELF binary for ABOOT
 TARGET_ABOOT_ELF := $(PRODUCT_OUT)/aboot.elf
-$(TARGET_ABOOT_ELF): ABOOT_CLEAN | $(ABOOT_OUT)
+$(TARGET_ABOOT_ELF): $(ABOOT_CLEAN) | $(ABOOT_OUT)
 	$(MAKE) -C bootable/bootloader/lk TOOLCHAIN_PREFIX=$(CROSS_COMPILE) BOOTLOADER_OUT=../../../$(ABOOT_OUT) $(BOOTLOADER_PLATFORM) $(EMMC_BOOT) $(SIGNED_KERNEL) $(VERIFIED_BOOT) $(DEVICE_STATUS)
 
 # NAND variant output
@@ -54,8 +56,10 @@ TARGET_NAND_BOOTLOADER := $(PRODUCT_OUT)/appsboot.mbn
 NAND_BOOTLOADER_OUT := $(TARGET_OUT_INTERMEDIATES)/NAND_BOOTLOADER_OBJ
 
 # Remove bootloader binary to trigger recompile when source changes
-appsbootldr_clean:
+appsbootldr_clean := $(ABOOT_OUT)/appsbootldr_clean.timestamp
+$(appsbootldr_clean) :
 	$(hide) rm -f $(TARGET_NAND_BOOTLOADER)
+	@touch $(appsbootldr_clean)
 
 $(NAND_BOOTLOADER_OUT):
 	mkdir -p $(NAND_BOOTLOADER_OUT)
@@ -64,18 +68,20 @@ $(NAND_BOOTLOADER_OUT):
 TARGET_EMMC_BOOTLOADER := $(PRODUCT_OUT)/emmc_appsboot.mbn
 EMMC_BOOTLOADER_OUT := $(TARGET_OUT_INTERMEDIATES)/EMMC_BOOTLOADER_OBJ
 
-emmc_appsbootldr_clean:
+emmc_appsbootldr_clean := $(ABOOT_OUT)/emmc_appsbootldr_clean.timestamp
+$(emmc_appsbootldr_clean):
 	$(hide) rm -f $(TARGET_EMMC_BOOTLOADER)
+	@touch $(emmc_appsbootldr_clean)
 
 $(EMMC_BOOTLOADER_OUT):
 	mkdir -p $(EMMC_BOOTLOADER_OUT)
 
 # Top level for NAND variant targets
-$(TARGET_NAND_BOOTLOADER): appsbootldr_clean | $(NAND_BOOTLOADER_OUT)
+$(TARGET_NAND_BOOTLOADER): $(appsbootldr_clean) | $(NAND_BOOTLOADER_OUT)
 	$(MAKE) -C bootable/bootloader/lk TOOLCHAIN_PREFIX=$(CROSS_COMPILE) BOOTLOADER_OUT=../../../$(NAND_BOOTLOADER_OUT) $(BOOTLOADER_PLATFORM) $(SIGNED_KERNEL)
 
 # Top level for eMMC variant targets
-$(TARGET_EMMC_BOOTLOADER): emmc_appsbootldr_clean | $(EMMC_BOOTLOADER_OUT) $(INSTALLED_KEYSTOREIMAGE_TARGET)
+$(TARGET_EMMC_BOOTLOADER): $(emmc_appsbootldr_clean) | $(EMMC_BOOTLOADER_OUT) $(INSTALLED_KEYSTOREIMAGE_TARGET)
 	$(MAKE) -C bootable/bootloader/lk TOOLCHAIN_PREFIX=$(CROSS_COMPILE) BOOTLOADER_OUT=../../../$(EMMC_BOOTLOADER_OUT) $(BOOTLOADER_PLATFORM) EMMC_BOOT=1 $(SIGNED_KERNEL) $(VERIFIED_BOOT) $(DEVICE_STATUS)
 
 # Keep build NAND & eMMC as default for targets still using TARGET_BOOTLOADER
@@ -88,13 +94,16 @@ $(TARGET_BOOTLOADER): $(NAND_BOOTLOADER_OUT) $(EMMC_BOOTLOADER_OUT) | $(TARGET_N
 TARGET_NANDWRITE := $(PRODUCT_OUT)/obj/nandwrite/build-$(BOOTLOADER_PLATFORM)_nandwrite/lk
 NANDWRITE_OUT := $(TARGET_OUT_INTERMEDIATES)/nandwrite
 
-nandwrite_clean:
+nandwrite_clean := $(ABOOT_OUT)/nandwrite_clean.timestamp
+$(nandwrite_clean):
 	$(hide) rm -f $(TARGET_NANDWRITE)
 	$(hide) rm -rf $(NANDWRITE_OUT)
+	@touch $(nandwrite_clean)
 
 $(NANDWRITE_OUT):
 	mkdir -p $(NANDWRITE_OUT)
 
-$(TARGET_NANDWRITE): nandwrite_clean | $(NANDWRITE_OUT)
+$(TARGET_NANDWRITE): $(nandwrite_clean) | $(NANDWRITE_OUT)
 	@echo $(BOOTLOADER_PLATFORM)_nandwrite
 	$(MAKE) -C bootable/bootloader/lk TOOLCHAIN_PREFIX=$(CROSS_COMPILE) BOOTLOADER_OUT=../../../$(NANDWRITE_OUT) $(BOOTLOADER_PLATFORM)_nandwrite BUILD_NANDWRITE=1
+	$(hide) rm -f $(nandwrite_clean)

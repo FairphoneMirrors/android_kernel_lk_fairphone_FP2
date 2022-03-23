@@ -616,14 +616,14 @@ int partition_fill_partition_meta(char has_slot_pname[][MAX_GET_VAR_NAME_SIZE],
 				/* 2. put the partition name in array */
 				tmp = pname_size-strlen(suffix_str);
 				strlcpy(has_slot_pname[count], pname, tmp+1);
-				strlcpy(has_slot_reply[count], " Yes", MAX_RSP_SIZE);
+				strlcpy(has_slot_reply[count], "yes", MAX_RSP_SIZE);
 				count++;
 			}
 		}
 		else
 		{
 			strlcpy(has_slot_pname[count], pname, MAX_GET_VAR_NAME_SIZE);
-			strlcpy(has_slot_reply[count], " No", MAX_RSP_SIZE);
+			strlcpy(has_slot_reply[count], "no", MAX_RSP_SIZE);
 			count++;
 		}
 

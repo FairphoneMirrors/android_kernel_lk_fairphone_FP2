@@ -4978,7 +4978,6 @@ void cmd_set_active(const char *arg, void *data, unsigned sz)
 	return;
 }
 
-#if DYNAMIC_PARTITION_SUPPORT
 void cmd_reboot_fastboot(const char *arg, void *data, unsigned sz)
 {
 	dprintf(INFO, "rebooting the device - userspace fastboot\n");
@@ -5011,6 +5010,7 @@ void cmd_reboot_recovery(const char *arg, void *data, unsigned sz)
 	return;
 }
 
+#if DYNAMIC_PARTITION_SUPPORT
 #ifdef VIRTUAL_AB_OTA
 void CmdUpdateSnapshot(const char *arg, void *data, unsigned sz)
 {
@@ -5604,10 +5604,8 @@ void aboot_fastboot_register_commands(void)
 						{"oem off-mode-charge", cmd_oem_off_mode_charger},
 						{"oem select-display-panel", cmd_oem_select_display_panel},
 						{"set_active",cmd_set_active},
-#if DYNAMIC_PARTITION_SUPPORT
 						{"reboot-fastboot",cmd_reboot_fastboot},
 						{"reboot-recovery",cmd_reboot_recovery},
-#endif
 #ifdef VIRTUAL_AB_OTA
 						{"snapshot-update", CmdUpdateSnapshot},
 #endif
@@ -5705,8 +5703,7 @@ void aboot_fastboot_register_commands(void)
 	fastboot_publish("battery-voltage", (const char *) battery_voltage);
 	fastboot_publish("battery-soc-ok", (const char *) battery_soc_ok);
 #endif
-        if (target_dynamic_partition_supported())
-		fastboot_publish("is-userspace", "no");
+	fastboot_publish("is-userspace", "no");
 
 	if (target_virtual_ab_supported()) {
 		SnapshotMergeStatus = GetSnapshotMergeStatus ();

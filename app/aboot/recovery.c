@@ -267,8 +267,7 @@ int recovery_init (void)
 		return 0;
 	}
 
-	if (target_dynamic_partition_supported() &&
-		!strcmp(RECOVERY_BOOT_FASTBOOT_CMD, msg.command)) {
+	if (!strcmp(RECOVERY_BOOT_FASTBOOT_CMD, msg.command)) {
 		boot_into_recovery = 1;		// Boot in userspace fastboot mode
 		return 0;
 	}
@@ -426,8 +425,7 @@ int _emmc_recovery_init(void)
 		boot_into_recovery = 1;
 	}
 
-	if (target_dynamic_partition_supported() &&
-		!strcmp(msg->command, RECOVERY_BOOT_FASTBOOT_CMD)) {
+	if (!strcmp(msg->command, RECOVERY_BOOT_FASTBOOT_CMD)) {
 		boot_into_recovery = 1;
 	}
 

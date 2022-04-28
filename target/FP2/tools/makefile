@@ -8,6 +8,7 @@ endif
 
 SRC_DIR  := target/$(TARGET)/tools
 COMPILER := gcc
+HOSTCFLAGS :=
 
 ifeq ($(EMMC_BOOT), 1)
   APPSBOOTHDR_FILES := EMMCBOOT.MBN
@@ -41,4 +42,4 @@ emmc_appsboothd.mbn: mkheader $(OUTBIN)
 
 mkheader: $(SRC_DIR)/mkheader.c
 	@mkdir -p $(BUILDDIR)
-	${COMPILER} -DMEMBASE=$(MEMBASE) $(SRC_DIR)/mkheader.c -o $(BUILDDIR)/mkheader
+	${COMPILER} ${HOSTCFLAGS} -DMEMBASE=$(MEMBASE) $(SRC_DIR)/mkheader.c -o $(BUILDDIR)/mkheader
